@@ -4,994 +4,629 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Zoom Savechat Analyzer — Be10x</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root {
-    --bg: #0d0f12;
-    --surface: #161a1f;
-    --surface2: #1e2430;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
-    --text: #e8ecf0;
-    --text2: #8a93a0;
-    --text3: #5a6372;
-    --accent: #3b8cf5;
-    --accent2: #1a6fd4;
-    --green: #29b87a;
-    --amber: #f5a623;
-    --red: #e24b4a;
-    --teal: #1dcba5;
-    --purple: #8b7fe8;
-    --font: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-    --sans: -apple-system, 'Segoe UI', sans-serif;
-    --radius: 8px;
-    --radius-lg: 12px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c14;--bg2:#0d1220;--surface:#111827;--surface2:#1a2235;--surface3:#1f2a40;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);--border3:rgba(255,255,255,0.18);
+  --text:#f0f4ff;--text2:#8896b0;--text3:#4a5568;
+  --indigo:#818cf8;--indigo2:#6366f1;--cyan:#22d3ee;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--pink:#ec4899;--violet:#a78bfa;
+  --font:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:8px;--r2:12px;--r3:16px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
 
-  /* HEADER */
-  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
-  .header-logo { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #fff; letter-spacing: -0.5px; }
-  .header-title { font-size: 15px; font-weight: 600; color: var(--text); }
-  .header-sub { font-size: 12px; color: var(--text2); }
-  .header-badge { margin-left: auto; background: rgba(59,140,245,0.15); color: var(--accent); font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid rgba(59,140,245,0.3); font-family: var(--font); }
+/* HEADER */
+.header{background:linear-gradient(135deg,#0d1527 0%,#111827 100%);border-bottom:1px solid var(--border2);padding:0 24px;height:62px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;}
+.logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#22d3ee);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;box-shadow:0 0 20px rgba(99,102,241,0.4);flex-shrink:0;}
+.header-brand{display:flex;flex-direction:column;gap:1px;}
+.header-title{font-size:15px;font-weight:700;letter-spacing:-0.3px;background:linear-gradient(90deg,#f0f4ff,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.header-sub{font-size:11px;color:var(--text3);font-family:var(--mono);}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.hdr-pill{background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.28);color:var(--indigo);font-size:11px;padding:4px 12px;border-radius:20px;font-family:var(--mono);}
+.hdr-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
-  /* LAYOUT */
-  .layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 61px); }
-  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-  .main { padding: 20px 24px; overflow-x: hidden; }
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 62px);}
 
-  /* NAV */
-  .nav-section { font-size: 10px; font-family: var(--font); color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin: 12px 0 6px; padding: 0 4px; }
-  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius); cursor: pointer; color: var(--text2); font-size: 13px; transition: all 0.15s; border: 1px solid transparent; }
-  .nav-item:hover { background: var(--surface2); color: var(--text); }
-  .nav-item.active { background: rgba(59,140,245,0.12); color: var(--accent); border-color: rgba(59,140,245,0.2); }
-  .nav-icon { width: 16px; height: 16px; opacity: 0.7; }
-  .nav-count { margin-left: auto; font-family: var(--font); font-size: 11px; background: var(--surface2); padding: 1px 7px; border-radius: 10px; color: var(--text2); }
+/* SIDEBAR */
+.sidebar{background:linear-gradient(180deg,#0d1220,#080c14);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:62px;height:calc(100vh - 62px);overflow-y:auto;}
+.nav-label{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;padding:0 8px;margin:16px 0 8px;}
+.nav-label:first-child{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;transition:all 0.18s;border:1px solid transparent;position:relative;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(34,211,238,0.07));color:#c7d2fe;border:1px solid rgba(99,102,241,0.25);}
+.nav-item.active::before{content:'';position:absolute;left:-1px;top:5px;bottom:5px;width:3px;background:linear-gradient(180deg,var(--indigo2),var(--cyan));border-radius:0 2px 2px 0;}
+.nav-ico{width:16px;height:16px;flex-shrink:0;opacity:0.6;}
+.nav-item.active .nav-ico{opacity:1;}
+.nav-count{margin-left:auto;font-family:var(--mono);font-size:11px;background:var(--surface3);padding:2px 8px;border-radius:6px;color:var(--text2);min-width:28px;text-align:center;}
+.nav-item.active .nav-count{background:rgba(99,102,241,0.2);color:var(--indigo);}
+.sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);line-height:1.7;padding-left:4px;}
 
-  /* UPLOAD ZONE */
-  .upload-zone { border: 1.5px dashed var(--border2); border-radius: var(--radius-lg); padding: 40px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface); }
-  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(59,140,245,0.05); }
-  .upload-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.5; }
-  .upload-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
-  .upload-sub { font-size: 12px; color: var(--text2); }
-  .upload-btn { margin-top: 16px; display: inline-block; padding: 8px 20px; background: var(--accent); color: #fff; border-radius: var(--radius); font-size: 13px; cursor: pointer; border: none; font-family: var(--sans); }
-  #fileInput { display: none; }
+/* MAIN */
+.main{padding:24px 28px;overflow-x:hidden;}
 
-  /* STATS ROW */
-  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
-  .stat-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; font-family: var(--font); letter-spacing: 0.5px; }
-  .stat-value { font-size: 24px; font-weight: 600; font-family: var(--font); }
-  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
-  .c-blue { color: var(--accent); }
-  .c-green { color: var(--green); }
-  .c-amber { color: var(--amber); }
-  .c-red { color: var(--red); }
-  .c-teal { color: var(--teal); }
-  .c-purple { color: var(--purple); }
+/* UPLOAD */
+.upload-hero{text-align:center;padding:8px 0 28px;}
+.upload-hero-title{font-size:28px;font-weight:700;letter-spacing:-0.6px;background:linear-gradient(135deg,#f0f4ff 30%,#818cf8 65%,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;line-height:1.2;}
+.upload-hero-sub{font-size:13px;color:var(--text2);max-width:440px;margin:0 auto;line-height:1.7;}
+.upload-zone{border:1.5px dashed rgba(99,102,241,0.28);border-radius:var(--r3);padding:48px 32px;text-align:center;cursor:pointer;transition:all 0.25s;background:linear-gradient(135deg,rgba(99,102,241,0.04),rgba(34,211,238,0.02));position:relative;overflow:hidden;max-width:620px;margin:0 auto;}
+.upload-zone::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(99,102,241,0.08) 0%,transparent 65%);pointer-events:none;}
+.upload-zone:hover,.upload-zone.drag{border-color:rgba(99,102,241,0.55);background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(34,211,238,0.04));}
+.upload-icon-wrap{width:64px;height:64px;margin:0 auto 16px;background:linear-gradient(135deg,rgba(99,102,241,0.18),rgba(34,211,238,0.1));border:1px solid rgba(99,102,241,0.28);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;transition:transform 0.2s;}
+.upload-zone:hover .upload-icon-wrap{transform:translateY(-4px);}
+.upload-zone-title{font-size:17px;font-weight:600;margin-bottom:6px;}
+.upload-zone-sub{font-size:13px;color:var(--text2);line-height:1.6;}
+.upload-formats{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+.fmt-pill{font-size:11px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:3px 10px;color:var(--text2);font-family:var(--mono);}
+.upload-cta{display:inline-flex;align-items:center;gap:8px;padding:11px 28px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(99,102,241,0.35);margin-top:20px;}
+.upload-cta:hover{box-shadow:0 6px 24px rgba(99,102,241,0.5);transform:translateY(-1px);}
+#fileInput{display:none;}
+.divider-or{display:flex;align-items:center;gap:12px;margin:24px auto;max-width:620px;color:var(--text3);font-size:12px;}
+.divider-or::before,.divider-or::after{content:'';flex:1;height:1px;background:var(--border);}
+.paste-area-wrap{max-width:620px;margin:0 auto;}
+.paste-label{font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:500;}
+.paste-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r2);padding:14px;color:var(--text);font-size:12px;width:100%;font-family:var(--mono);line-height:1.6;outline:none;resize:vertical;min-height:110px;transition:border-color 0.2s;}
+.paste-box:focus{border-color:rgba(99,102,241,0.5);}
+.paste-box::placeholder{color:var(--text3);}
+.paste-actions{display:flex;gap:8px;margin-top:10px;}
+.info-box{max-width:620px;margin:20px auto 0;background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.18);border-radius:var(--r2);padding:14px 16px;display:flex;gap:12px;align-items:flex-start;}
+.info-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.info-text{font-size:12.5px;color:#a5b4fc;line-height:1.7;}
+.info-text code{background:rgba(99,102,241,0.2);padding:1px 6px;border-radius:4px;font-family:var(--mono);font-size:11px;color:#c7d2fe;}
 
-  /* SECTION HEADING */
-  .section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .section-title { font-size: 14px; font-weight: 600; color: var(--text); }
-  .section-tag { font-size: 11px; color: var(--text2); background: var(--surface2); padding: 2px 8px; border-radius: 4px; font-family: var(--font); }
-  .section-spacer { flex: 1; }
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:18px 20px;position:relative;overflow:hidden;transition:transform 0.18s,border-color 0.18s;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r2) var(--r2) 0 0;}
+.stat-card:hover{transform:translateY(-2px);border-color:var(--border2);}
+.sc-blue::before{background:linear-gradient(90deg,var(--indigo2),var(--cyan));}
+.sc-cyan::before{background:linear-gradient(90deg,var(--cyan),#0ea5e9);}
+.sc-red::before{background:linear-gradient(90deg,var(--red),var(--pink));}
+.sc-green::before{background:linear-gradient(90deg,var(--green),#34d399);}
+.stat-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:12px;}
+.sc-blue .stat-ico{background:rgba(99,102,241,0.14);}
+.sc-cyan .stat-ico{background:rgba(34,211,238,0.1);}
+.sc-red .stat-ico{background:rgba(239,68,68,0.1);}
+.sc-green .stat-ico{background:rgba(16,185,129,0.1);}
+.stat-val{font-size:28px;font-weight:700;font-family:var(--mono);letter-spacing:-1px;line-height:1;}
+.sc-blue .stat-val{color:var(--indigo);}
+.sc-cyan .stat-val{color:var(--cyan);}
+.sc-red .stat-val{color:var(--red);}
+.sc-green .stat-val{color:var(--green);}
+.stat-lbl{font-size:12px;font-weight:600;color:var(--text);margin-top:6px;}
+.stat-sub2{font-size:11px;color:var(--text3);margin-top:3px;}
 
-  /* ISSUE CATEGORIES */
-  .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-  .cat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; cursor: pointer; transition: all 0.15s; }
-  .cat-card:hover { border-color: var(--border2); }
-  .cat-card.selected { border-color: var(--accent); background: rgba(59,140,245,0.07); }
-  .cat-name { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
-  .cat-kw { font-size: 11px; color: var(--text2); font-family: var(--font); }
-  .cat-count { font-size: 18px; font-weight: 600; font-family: var(--font); margin-top: 8px; }
+/* SECTION HEAD */
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.sec-title{font-size:15px;font-weight:700;letter-spacing:-0.3px;}
+.sec-badge{font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border2);padding:2px 9px;border-radius:5px;font-family:var(--mono);}
+.sec-spacer{flex:1;}
 
-  /* TABLE */
-  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); }
-  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-  thead { background: var(--surface2); }
-  th { padding: 10px 12px; text-align: left; font-size: 11px; font-family: var(--font); color: var(--text2); letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; font-weight: 500; }
-  td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
-  .chat-cell { max-width: 380px; line-height: 1.5; word-wrap: break-word; }
-  .time-cell { font-family: var(--font); font-size: 11px; color: var(--text2); white-space: nowrap; }
-  .admin-cell { font-size: 12px; font-weight: 500; white-space: nowrap; }
-  .reply-cell { font-size: 11px; color: var(--text2); white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+/* CAT GRID */
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px;}
+.cat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden;}
+.cat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 var(--r2) var(--r2);opacity:0;transition:opacity 0.2s;}
+.cat-card:hover{border-color:var(--border3);transform:translateY(-1px);}
+.cat-card:hover::after{opacity:1;}
+.cat-name{font-size:13px;font-weight:600;margin-bottom:4px;}
+.cat-kw{font-size:11px;color:var(--text2);font-family:var(--mono);line-height:1.5;}
+.cat-count-row{display:flex;align-items:baseline;gap:6px;margin-top:10px;}
+.cat-num{font-size:22px;font-weight:700;font-family:var(--mono);}
+.cat-total{font-size:12px;color:var(--text3);}
+.cat-bar{height:3px;background:var(--surface3);border-radius:2px;margin-top:8px;overflow:hidden;}
+.cat-bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease;}
+.cc-purple .cat-name{color:var(--violet);}.cc-purple .cat-num{color:var(--violet);}.cc-purple .cat-bar-fill,.cc-purple::after{background:var(--violet);}
+.cc-amber .cat-name{color:var(--amber);}.cc-amber .cat-num{color:var(--amber);}.cc-amber .cat-bar-fill,.cc-amber::after{background:var(--amber);}
+.cc-red .cat-name{color:var(--red);}.cc-red .cat-num{color:var(--red);}.cc-red .cat-bar-fill,.cc-red::after{background:var(--red);}
+.cc-cyan .cat-name{color:var(--cyan);}.cc-cyan .cat-num{color:var(--cyan);}.cc-cyan .cat-bar-fill,.cc-cyan::after{background:var(--cyan);}
+.cc-blue .cat-name{color:var(--indigo);}.cc-blue .cat-num{color:var(--indigo);}.cc-blue .cat-bar-fill,.cc-blue::after{background:var(--indigo2);}
+.cc-green .cat-name{color:var(--green);}.cc-green .cat-num{color:var(--green);}.cc-green .cat-bar-fill,.cc-green::after{background:var(--green);}
+.cc-orange .cat-name{color:#fb923c;}.cc-orange .cat-num{color:#fb923c;}.cc-orange .cat-bar-fill,.cc-orange::after{background:#fb923c;}
 
-  /* ISSUE BADGE */
-  .badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-family: var(--font); font-weight: 500; white-space: nowrap; }
-  .badge-blur { background: rgba(139,127,232,0.15); color: var(--purple); border: 1px solid rgba(139,127,232,0.25); }
-  .badge-audio { background: rgba(245,166,35,0.15); color: var(--amber); border: 1px solid rgba(245,166,35,0.25); }
-  .badge-recorded { background: rgba(226,75,74,0.15); color: var(--red); border: 1px solid rgba(226,75,74,0.25); }
-  .badge-network { background: rgba(29,203,165,0.15); color: var(--teal); border: 1px solid rgba(29,203,165,0.25); }
-  .badge-login { background: rgba(59,140,245,0.15); color: var(--accent); border: 1px solid rgba(59,140,245,0.25); }
-  .badge-custom { background: rgba(41,184,122,0.15); color: var(--green); border: 1px solid rgba(41,184,122,0.25); }
-  .badge-payment { background: rgba(245,90,48,0.15); color: #f55a30; border: 1px solid rgba(245,90,48,0.25); }
-  .badge-feedback { background: rgba(200,200,200,0.1); color: var(--text2); border: 1px solid var(--border); }
+/* TABLE */
+.table-wrap{border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;background:var(--surface);}
+.table-inner{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead tr{background:var(--surface2);}
+th{padding:11px 14px;text-align:left;font-size:10.5px;font-family:var(--mono);color:var(--text2);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap;font-weight:500;}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text);}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:rgba(255,255,255,0.022);}
+.td-time{font-family:var(--mono);font-size:11px;color:var(--text3);white-space:nowrap;}
+.td-name{font-size:12.5px;font-weight:600;white-space:nowrap;}
+.td-to{font-size:11.5px;color:var(--text2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.td-chat{max-width:400px;line-height:1.55;word-break:break-word;}
 
-  /* TOGGLE */
-  .toggle-row { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-  .toggle { width: 32px; height: 18px; background: var(--surface2); border-radius: 9px; position: relative; transition: background 0.2s; flex-shrink: 0; border: 1px solid var(--border2); }
-  .toggle.on { background: var(--accent); border-color: var(--accent); }
-  .toggle::after { content: ''; position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #fff; top: 2px; left: 2px; transition: transform 0.2s; }
-  .toggle.on::after { transform: translateX(14px); }
+/* AVATAR */
+.avatar{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;vertical-align:middle;margin-right:7px;}
 
-  /* BUTTONS */
-  .btn { padding: 8px 18px; border-radius: var(--radius); font-size: 13px; cursor: pointer; border: none; font-family: var(--sans); transition: all 0.15s; font-weight: 500; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: var(--accent2); }
-  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
-  .btn-secondary:hover { background: var(--surface); border-color: var(--border2); }
-  .btn-success { background: var(--green); color: #fff; }
-  .btn-success:hover { background: #22a06b; }
-  .btn-sm { padding: 5px 12px; font-size: 12px; }
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 10px;border-radius:20px;font-family:var(--mono);font-weight:500;white-space:nowrap;}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.badge-blur{background:rgba(167,139,250,0.12);color:#c4b5fd;border:1px solid rgba(167,139,250,0.2);}.badge-blur::before{background:var(--violet);}
+.badge-audio{background:rgba(245,158,11,0.12);color:#fcd34d;border:1px solid rgba(245,158,11,0.2);}.badge-audio::before{background:var(--amber);}
+.badge-recorded{background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.2);}.badge-recorded::before{background:var(--red);}
+.badge-network{background:rgba(34,211,238,0.1);color:#67e8f9;border:1px solid rgba(34,211,238,0.18);}.badge-network::before{background:var(--cyan);}
+.badge-login{background:rgba(99,102,241,0.12);color:#a5b4fc;border:1px solid rgba(99,102,241,0.22);}.badge-login::before{background:var(--indigo2);}
+.badge-custom{background:rgba(16,185,129,0.1);color:#6ee7b7;border:1px solid rgba(16,185,129,0.2);}.badge-custom::before{background:var(--green);}
+.badge-payment{background:rgba(251,146,60,0.1);color:#fdba74;border:1px solid rgba(251,146,60,0.2);}.badge-payment::before{background:#fb923c;}
+.badge-feedback{background:rgba(148,163,184,0.08);color:var(--text2);border:1px solid var(--border);}.badge-feedback::before{background:var(--text3);}
 
-  /* INPUT */
-  .input { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 8px 12px; color: var(--text); font-size: 13px; width: 100%; font-family: var(--sans); outline: none; }
-  .input:focus { border-color: var(--accent); }
-  .input::placeholder { color: var(--text3); }
+/* HANDLER CHIP */
+.handler-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.22);border-radius:6px;padding:3px 9px;font-size:12px;color:#a5b4fc;font-weight:600;}
+.handler-dot{width:6px;height:6px;border-radius:50%;background:var(--indigo);box-shadow:0 0 5px var(--indigo);}
 
-  /* CUSTOM ISSUE BUILDER */
-  .custom-builder { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 20px; }
-  .custom-tag { display: inline-flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 4px; padding: 3px 8px; font-size: 12px; font-family: var(--font); }
-  .custom-tag-remove { cursor: pointer; color: var(--text2); font-size: 14px; line-height: 1; }
-  .custom-tag-remove:hover { color: var(--red); }
-  .tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 28px; }
+/* TOGGLE */
+.toggle-wrap{display:flex;align-items:center;cursor:pointer;}
+.toggle{width:34px;height:20px;background:var(--surface3);border-radius:10px;position:relative;transition:background 0.2s;flex-shrink:0;border:1px solid var(--border2);}
+.toggle.on{background:var(--indigo2);border-color:var(--indigo2);box-shadow:0 0 8px rgba(99,102,241,0.35);}
+.toggle::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+.toggle.on::after{transform:translateX(14px);}
 
-  /* EXPORT BAR */
-  .export-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-  .export-info { flex: 1; }
-  .export-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
-  .export-sub { font-size: 11px; color: var(--text2); }
-  .export-sheets { display: flex; gap: 8px; flex-wrap: wrap; }
-  .sheet-pill { font-size: 11px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 4px; padding: 3px 10px; font-family: var(--font); color: var(--text2); }
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:var(--r);font-size:13px;cursor:pointer;border:none;font-family:var(--font);transition:all 0.18s;font-weight:600;}
+.btn-primary{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;box-shadow:0 3px 12px rgba(99,102,241,0.28);}
+.btn-primary:hover{box-shadow:0 5px 20px rgba(99,102,241,0.48);transform:translateY(-1px);}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border2);}
+.btn-secondary:hover{background:var(--surface3);border-color:var(--border3);}
+.btn-success{background:linear-gradient(135deg,#059669,#10b981);color:#fff;box-shadow:0 3px 12px rgba(16,185,129,0.28);}
+.btn-success:hover{box-shadow:0 5px 20px rgba(16,185,129,0.44);transform:translateY(-1px);}
+.btn-sm{padding:6px 14px;font-size:12px;}
+.btn-xs{padding:4px 10px;font-size:11px;}
 
-  /* FILTER BAR */
-  .filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
-  .filter-select { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 6px 10px; color: var(--text); font-size: 12px; font-family: var(--sans); outline: none; cursor: pointer; }
-  .filter-search { flex: 1; min-width: 180px; }
+/* INPUT */
+.inp{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:9px 13px;color:var(--text);font-size:13px;width:100%;font-family:var(--font);outline:none;transition:border-color 0.18s;}
+.inp:focus{border-color:rgba(99,102,241,0.5);box-shadow:0 0 0 3px rgba(99,102,241,0.07);}
+.inp::placeholder{color:var(--text3);}
+.inp-sm{padding:7px 11px;font-size:12.5px;}
 
-  /* PAGINATION */
-  .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 8px 0; }
-  .page-info { font-size: 12px; color: var(--text2); font-family: var(--font); }
-  .page-btns { display: flex; gap: 6px; }
-  .page-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 10px; font-size: 12px; cursor: pointer; color: var(--text2); font-family: var(--sans); }
-  .page-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+/* FILTER BAR */
+.filter-sel{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:7px 11px;color:var(--text);font-size:12.5px;font-family:var(--font);outline:none;cursor:pointer;transition:border-color 0.18s;}
+.filter-sel:focus{border-color:rgba(99,102,241,0.5);}
 
-  /* EMPTY STATE */
-  .empty { text-align: center; padding: 48px 24px; color: var(--text2); }
-  .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
-  .empty-text { font-size: 14px; }
-  .empty-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
+/* PAGINATION */
+.pagination{display:flex;align-items:center;justify-content:space-between;margin-top:14px;}
+.page-info{font-size:12px;color:var(--text3);font-family:var(--mono);}
+.page-btns{display:flex;gap:6px;}
+.page-btn{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:5px 12px;font-size:12px;cursor:pointer;color:var(--text2);font-family:var(--font);font-weight:500;transition:all 0.15s;}
+.page-btn:hover{border-color:var(--indigo);color:var(--indigo);}
 
-  /* PROGRESS */
-  .progress-bar { height: 3px; background: var(--surface2); border-radius: 2px; margin-top: 8px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s; }
+/* EXPORT BAR */
+.export-bar{background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(34,211,238,0.05));border:1px solid rgba(99,102,241,0.22);border-radius:var(--r2);padding:18px 22px;display:flex;align-items:center;gap:16px;margin-bottom:24px;position:relative;overflow:hidden;}
+.export-bar::before{content:'';position:absolute;top:0;right:0;width:200px;height:100%;background:radial-gradient(ellipse at right,rgba(34,211,238,0.06) 0%,transparent 60%);pointer-events:none;}
+.export-info{flex:1;}
+.export-title{font-size:14px;font-weight:700;margin-bottom:3px;}
+.export-sub{font-size:12px;color:var(--text2);}
+.export-sheets{display:flex;gap:7px;flex-wrap:wrap;}
+.sheet-pill{font-size:11px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:4px;padding:3px 10px;font-family:var(--mono);color:#a5b4fc;}
 
-  /* TABS */
-  .tabs { display: flex; gap: 2px; background: var(--surface2); border-radius: var(--radius); padding: 3px; margin-bottom: 16px; width: fit-content; }
-  .tab { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; color: var(--text2); transition: all 0.15s; }
-  .tab.active { background: var(--surface); color: var(--text); font-weight: 500; }
+/* BUILDER CARD */
+.builder-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:18px;margin-bottom:12px;}
+.builder-card-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.field-label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:6px;letter-spacing:0.3px;}
+.tags-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;min-height:30px;}
+.kw-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:5px;padding:3px 9px;font-size:12px;font-family:var(--mono);color:#a5b4fc;}
+.kw-rm{cursor:pointer;color:#6366f1;font-size:15px;line-height:1;transition:color 0.15s;}
+.kw-rm:hover{color:var(--red);}
 
-  /* SCROLLBAR */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+/* ALERT */
+.alert-note{background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r);padding:12px 16px;display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:#fde68a;line-height:1.6;margin-bottom:16px;}
+.alert-note-ico{flex-shrink:0;font-size:14px;margin-top:1px;}
 
-  .handler-chip { display: inline-flex; align-items: center; gap: 6px; background: rgba(59,140,245,0.1); border: 1px solid rgba(59,140,245,0.2); border-radius: 4px; padding: 2px 8px; font-size: 11px; color: var(--accent); font-family: var(--font); }
+/* EMPTY */
+.empty-state{text-align:center;padding:56px 24px;background:var(--surface);border-radius:var(--r2);}
+.empty-icon{font-size:44px;margin-bottom:14px;opacity:0.2;}
+.empty-txt{font-size:14px;font-weight:600;color:var(--text2);}
+.empty-sub2{font-size:12px;color:var(--text3);margin-top:5px;}
 
-  .note { background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.2); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--amber); line-height: 1.5; }
-  .note strong { font-weight: 600; }
-
-  .view-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
-
-  @media (max-width: 900px) {
-    .layout { grid-template-columns: 1fr; }
-    .sidebar { display: none; }
-    .stats-row { grid-template-columns: repeat(2, 1fr); }
-    .cat-grid { grid-template-columns: repeat(2, 1fr); }
-  }
+@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{display:none}.stats-row{grid-template-columns:repeat(2,1fr)}.cat-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-logo">Z</div>
-  <div>
+<header class="header">
+  <div class="logo-mark">Z+</div>
+  <div class="header-brand">
     <div class="header-title">Zoom Savechat Analyzer</div>
-    <div class="header-sub">Be10x — Session Quality Intelligence</div>
+    <div class="header-sub">be10x · session intelligence</div>
   </div>
-  <div class="header-badge">v2.1</div>
-</div>
+  <div class="header-right">
+    <div class="hdr-status"><span class="status-dot"></span><span id="hdrStatus">Ready</span></div>
+    <div class="hdr-pill">v2.1</div>
+  </div>
+</header>
 
 <div class="layout">
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="nav-section">Navigation</div>
-    <div class="nav-item active" onclick="switchView('upload')" id="nav-upload">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v9M5 5l3-3 3 3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/></svg>
-      Upload Chat File
+<nav class="sidebar">
+  <div class="nav-label">Workflow</div>
+  <div class="nav-item active" id="nav-upload" onclick="switchView('upload')">
+    <svg class="nav-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v9M5 4.5L8 2l3 2.5M2 12v1.5c0 .28.22.5.5.5h11c.28 0 .5-.22.5-.5V12"/></svg>
+    Upload File
+  </div>
+  <div class="nav-item" id="nav-chat" onclick="switchView('chat')">
+    <svg class="nav-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="1.5" width="13" height="13" rx="2"/><path d="M4 5.5h8M4 8h8M4 10.5h5"/></svg>
+    Total Chat
+    <span class="nav-count" id="nc-chat">0</span>
+  </div>
+  <div class="nav-item" id="nav-issues" onclick="switchView('issues')">
+    <svg class="nav-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v4M8 11v.5"/></svg>
+    Issue Analysis
+    <span class="nav-count" id="nc-issues">0</span>
+  </div>
+  <div class="nav-item" id="nav-handler" onclick="switchView('handler')">
+    <svg class="nav-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5.5" r="3"/><path d="M2.5 14c0-2.76 2.46-5 5.5-5s5.5 2.24 5.5 5"/></svg>
+    Handler Replies
+    <span class="nav-count" id="nc-handler">0</span>
+  </div>
+  <div class="nav-label">Settings</div>
+  <div class="nav-item" id="nav-config" onclick="switchView('config')">
+    <svg class="nav-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06"/></svg>
+    Issue Categories
+  </div>
+  <div class="sidebar-footer">Upload → Review → Analyze → Export XLSX</div>
+</nav>
+
+<main class="main">
+
+<div id="exportBar" style="display:none;">
+  <div class="export-bar">
+    <div class="export-info">
+      <div class="export-title">Export Final Report</div>
+      <div class="export-sub">3-sheet XLSX · Be10x SOP format · ready to share</div>
     </div>
-    <div class="nav-item" onclick="switchView('chat')" id="nav-chat">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="14" height="14" rx="2"/><path d="M4 5h8M4 8h8M4 11h5"/></svg>
-      Total Chat
-      <span class="nav-count" id="nc-chat">0</span>
+    <div class="export-sheets">
+      <span class="sheet-pill">Total Chat</span>
+      <span class="sheet-pill">Total Issues</span>
+      <span class="sheet-pill">Handler Replies</span>
     </div>
-    <div class="nav-item" onclick="switchView('issues')" id="nav-issues">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5M8 11v.5"/></svg>
-      Issue Analysis
-      <span class="nav-count" id="nc-issues">0</span>
+    <button class="btn btn-success" onclick="exportXLSX()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 1v8M4 6l3 3 3-3M1 10v2a1 1 0 001 1h10a1 1 0 001-1v-2"/></svg>
+      Export XLSX
+    </button>
+  </div>
+</div>
+
+<!-- VIEW: UPLOAD -->
+<div id="view-upload">
+  <div class="upload-hero">
+    <div class="upload-hero-title">Zoom Chat Intelligence</div>
+    <div class="upload-hero-sub">Upload your session savechat and instantly get issue analysis, handler insights, and an export-ready report.</div>
+  </div>
+  <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+    <div class="upload-icon-wrap">📂</div>
+    <div class="upload-zone-title">Drop your Zoom savechat here</div>
+    <div class="upload-zone-sub">Drag &amp; drop your .txt file, or click to browse</div>
+    <div class="upload-formats">
+      <span class="fmt-pill">.txt</span><span class="fmt-pill">Zoom format</span><span class="fmt-pill">25,000+ rows</span>
     </div>
-    <div class="nav-item" onclick="switchView('handler')" id="nav-handler">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6"/></svg>
-      Handler Replies
-      <span class="nav-count" id="nc-handler">0</span>
-    </div>
-    <div class="nav-section">Settings</div>
-    <div class="nav-item" onclick="switchView('config')" id="nav-config">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
-      Issue Categories
-    </div>
-    <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border);">
-      <div style="font-size: 11px; color: var(--text3); line-height: 1.6; padding: 4px;">
-        Upload → Review → Export XLSX with 3 sheets
-      </div>
+    <button class="upload-cta" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.5 1.5v9M4.5 4L7.5 1l3 3M1.5 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/></svg>
+      Choose File
+    </button>
+  </div>
+  <input type="file" id="fileInput" accept=".txt,.log" onchange="loadFile(event)"/>
+  <div class="divider-or">or paste chat text directly</div>
+  <div class="paste-area-wrap">
+    <div class="paste-label">Paste Zoom chat content</div>
+    <textarea class="paste-box" id="pasteArea" placeholder="10:46:56 From Rahul Sharma to Hosts and panelists:&#10;&#9;Audio is not coming properly&#10;11:04:00 From Aditya Be10x to Rahul Sharma, Hosts and panelists:&#10;&#9;Please try rejoining the session"></textarea>
+    <div class="paste-actions">
+      <button class="btn btn-primary btn-sm" onclick="parseFromPaste()">Parse Chat</button>
+      <button class="btn btn-secondary btn-sm" onclick="loadDemo()">Load Demo</button>
     </div>
   </div>
-
-  <!-- MAIN -->
-  <div class="main" id="mainArea">
-
-    <!-- UPLOAD VIEW -->
-    <div id="view-upload">
-      <div class="section-head">
-        <div class="section-title">Upload Zoom Savechat</div>
-        <div class="section-tag">.txt file</div>
-      </div>
-      <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
-        <div class="upload-icon">📂</div>
-        <div class="upload-title">Drop your Zoom chat .txt file here</div>
-        <div class="upload-sub">Supports Zoom savechat format with tab-separated columns</div>
-        <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Choose File</button>
-      </div>
-      <input type="file" id="fileInput" accept=".txt,.log" onchange="loadFile(event)"/>
-
-      <div style="margin-top: 20px;" class="note">
-        <strong>Expected Zoom .txt format:</strong><br/>
-        <code>HH:MM:SS&nbsp;&nbsp;&nbsp;From [Name] to [Name]/Everyone:&nbsp;&nbsp;&nbsp;[Message]</code><br/>
-        The parser auto-detects tab-separated and space-separated formats. Blank rows are stripped automatically.
-      </div>
-
-      <div style="margin-top: 20px;">
-        <div class="section-head"><div class="section-title">Or paste chat content directly</div></div>
-        <textarea class="input" id="pasteArea" rows="8" placeholder="Paste Zoom chat text here...&#10;00:01:23&#9;From Rahul Singh to Everyone:&#9;Audio is not coming&#10;00:02:10&#9;From Aditya Be10x to Rahul Singh:&#9;Please rejoin the session"></textarea>
-        <div style="margin-top: 10px; display: flex; gap: 8px;">
-          <button class="btn btn-primary" onclick="parseFromPaste()">Parse Chat</button>
-          <button class="btn btn-secondary" onclick="loadDemo()">Load Demo Data</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- CHAT VIEW -->
-    <div id="view-chat" style="display:none;">
-      <div class="stats-row" id="statsRow"></div>
-      <div class="section-head">
-        <div class="section-title">Total Chat</div>
-        <div class="section-tag" id="tag-chat">0 messages</div>
-        <div class="section-spacer"></div>
-        <div class="filter-bar" style="margin:0;">
-          <input class="input filter-search" id="chatSearch" placeholder="Search chats..." oninput="renderChatTable()" style="width:200px;"/>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table id="chatTable">
-          <thead><tr><th>Time</th><th>From</th><th>To</th><th>Chat</th></tr></thead>
-          <tbody id="chatTbody"></tbody>
-        </table>
-      </div>
-      <div class="pagination">
-        <div class="page-info" id="chatPageInfo"></div>
-        <div class="page-btns">
-          <button class="page-btn" onclick="changePage('chat',-1)">← Prev</button>
-          <button class="page-btn" onclick="changePage('chat',1)">Next →</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ISSUES VIEW -->
-    <div id="view-issues" style="display:none;">
-      <div class="section-head">
-        <div class="section-title">Issue Analysis</div>
-        <div class="section-tag" id="tag-issues">0 issues found</div>
-        <div class="section-spacer"></div>
-        <div class="view-toggle">
-          <span>Filter:</span>
-          <select class="filter-select" id="issueFilter" onchange="renderIssueTable()">
-            <option value="all">All Issues</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="cat-grid" id="catGrid"></div>
-
-      <div class="note" style="margin-bottom: 16px;">
-        <strong>Recorded Session flag:</strong> Only chats where the customer is <em>complaining</em> that the session is pre-recorded are flagged. Requests to receive recordings or asking if session will be recorded are excluded.
-      </div>
-
-      <div class="section-head" style="margin-top: 4px;">
-        <div class="section-title">Flagged Issues</div>
-        <div class="section-spacer"></div>
-        <input class="input" id="issueSearch" placeholder="Search issues..." oninput="renderIssueTable()" style="width:200px;"/>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Time</th><th>From</th><th>Replied To</th><th>Chat</th><th>Issue</th><th>Include</th></tr></thead>
-          <tbody id="issueTbody"></tbody>
-        </table>
-      </div>
-      <div class="pagination">
-        <div class="page-info" id="issuePageInfo"></div>
-        <div class="page-btns">
-          <button class="page-btn" onclick="changePage('issue',-1)">← Prev</button>
-          <button class="page-btn" onclick="changePage('issue',1)">Next →</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- HANDLER VIEW -->
-    <div id="view-handler" style="display:none;">
-      <div class="section-head">
-        <div class="section-title">Handler Replies</div>
-        <div class="section-tag" id="tag-handler">0 replies</div>
-        <div class="section-spacer"></div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span style="font-size:12px; color:var(--text2);">Handler name:</span>
-          <input class="input" id="handlerName" placeholder="Aditya Be10x" oninput="recomputeHandler()" style="width:160px;"/>
-        </div>
-      </div>
-
-      <div class="note" style="margin-bottom:16px;">
-        Showing only messages from handler sent to <strong>individual customers</strong> — broadcasts to "Everyone" are excluded.
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Time</th><th>Handler</th><th>Replied To</th><th>Message</th></tr></thead>
-          <tbody id="handlerTbody"></tbody>
-        </table>
-      </div>
-      <div class="pagination">
-        <div class="page-info" id="handlerPageInfo"></div>
-        <div class="page-btns">
-          <button class="page-btn" onclick="changePage('handler',-1)">← Prev</button>
-          <button class="page-btn" onclick="changePage('handler',1)">Next →</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- CONFIG VIEW -->
-    <div id="view-config" style="display:none;">
-      <div class="section-head">
-        <div class="section-title">Issue Categories & Keywords</div>
-        <div class="section-tag">edit, reanalyze</div>
-      </div>
-
-      <div id="configCards" style="display:flex; flex-direction:column; gap:12px;"></div>
-
-      <div style="margin-top: 20px;">
-        <div class="section-head"><div class="section-title">Add Custom Issue Category</div></div>
-        <div class="custom-builder">
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
-            <div>
-              <div style="font-size:11px; color:var(--text2); margin-bottom:6px;">Category name</div>
-              <input class="input" id="newCatName" placeholder="e.g. Slide Issues"/>
-            </div>
-            <div>
-              <div style="font-size:11px; color:var(--text2); margin-bottom:6px;">Color</div>
-              <select class="input" id="newCatColor">
-                <option value="badge-custom">Green</option>
-                <option value="badge-blur">Purple</option>
-                <option value="badge-audio">Amber</option>
-                <option value="badge-recorded">Red</option>
-                <option value="badge-network">Teal</option>
-                <option value="badge-login">Blue</option>
-                <option value="badge-payment">Orange</option>
-              </select>
-            </div>
-          </div>
-          <div style="font-size:11px; color:var(--text2); margin-bottom:6px;">Keywords (press Enter or comma to add)</div>
-          <input class="input" id="newCatKwInput" placeholder="Type a keyword and press Enter..." onkeydown="addKwTag(event)"/>
-          <div class="tags-wrap" id="newCatTags"></div>
-          <div style="margin-top: 12px; display:flex; gap:8px;">
-            <button class="btn btn-primary btn-sm" onclick="addCustomCategory()">Add Category</button>
-            <button class="btn btn-secondary btn-sm" onclick="clearNewCat()">Clear</button>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-top:8px;">
-        <button class="btn btn-primary" onclick="reanalyze(); switchView('issues')">Re-analyze with Current Config →</button>
-      </div>
-    </div>
-
-    <!-- EXPORT ALWAYS VISIBLE IF DATA LOADED -->
-    <div id="exportBar" style="display:none; margin-top: 24px;">
-      <div class="export-bar">
-        <div class="export-info">
-          <div class="export-title">Export Final Report</div>
-          <div class="export-sub">Generates XLSX with 3 sheets matching the Be10x format</div>
-        </div>
-        <div class="export-sheets">
-          <span class="sheet-pill">Total Chat</span>
-          <span class="sheet-pill">Total Issues</span>
-          <span class="sheet-pill">Handler Replies</span>
-        </div>
-        <button class="btn btn-success" onclick="exportXLSX()">⬇ Export XLSX</button>
-      </div>
-    </div>
-
+  <div class="info-box">
+    <span class="info-icon">💡</span>
+    <div class="info-text"><strong>Expected format:</strong> <code>HH:MM:SS From [Name] to [Destination]:</code> on one line, message on the next (tab-indented). Matches standard Zoom Save Chat export.</div>
   </div>
+</div>
+
+<!-- VIEW: TOTAL CHAT -->
+<div id="view-chat" style="display:none;">
+  <div id="statsRow" class="stats-row"></div>
+  <div class="sec-head">
+    <div class="sec-title">Total Chat</div>
+    <span class="sec-badge" id="tag-chat">0 messages</span>
+    <div class="sec-spacer"></div>
+    <input class="inp inp-sm" id="chatSearch" placeholder="Search messages…" oninput="renderChatTable()" style="width:220px;"/>
+  </div>
+  <div class="table-wrap"><div class="table-inner">
+    <table><thead><tr><th>Time</th><th>From</th><th>To</th><th>Message</th></tr></thead>
+    <tbody id="chatTbody"></tbody></table>
+  </div></div>
+  <div class="pagination">
+    <div class="page-info" id="chatPageInfo"></div>
+    <div class="page-btns">
+      <button class="page-btn" onclick="changePage('chat',-1)">← Prev</button>
+      <button class="page-btn" onclick="changePage('chat',1)">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW: ISSUES -->
+<div id="view-issues" style="display:none;">
+  <div class="sec-head">
+    <div class="sec-title">Issue Analysis</div>
+    <span class="sec-badge" id="tag-issues">0 issues</span>
+    <div class="sec-spacer"></div>
+    <select class="filter-sel" id="issueFilter" onchange="renderIssueTable()"><option value="all">All Categories</option></select>
+    <input class="inp inp-sm" id="issueSearch" placeholder="Search…" oninput="renderIssueTable()" style="width:180px;"/>
+  </div>
+  <div class="cat-grid" id="catGrid"></div>
+  <div class="alert-note">
+    <span class="alert-note-ico">⚠️</span>
+    <span><strong>Recorded Session logic:</strong> Only complaints that the session is pre-recorded are flagged. Requests to receive recordings ("will we get recording?") are automatically excluded.</span>
+  </div>
+  <div class="sec-head" style="margin-top:4px;">
+    <div class="sec-title">Flagged Issues</div>
+    <span class="sec-badge" id="tag-issues-count">—</span>
+    <div class="sec-spacer"></div>
+    <span style="font-size:12px;color:var(--text2);">Toggle rows to include / exclude from export</span>
+  </div>
+  <div class="table-wrap"><div class="table-inner">
+    <table><thead><tr><th>Time</th><th>From</th><th>Replied To</th><th>Message</th><th>Issue</th><th>Include</th></tr></thead>
+    <tbody id="issueTbody"></tbody></table>
+  </div></div>
+  <div class="pagination">
+    <div class="page-info" id="issuePageInfo"></div>
+    <div class="page-btns">
+      <button class="page-btn" onclick="changePage('issue',-1)">← Prev</button>
+      <button class="page-btn" onclick="changePage('issue',1)">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW: HANDLER -->
+<div id="view-handler" style="display:none;">
+  <div class="sec-head">
+    <div class="sec-title">Handler Replies</div>
+    <span class="sec-badge" id="tag-handler">0 replies</span>
+    <div class="sec-spacer"></div>
+    <span style="font-size:12px;color:var(--text2);margin-right:6px;">Handler:</span>
+    <input class="inp inp-sm" id="handlerName" placeholder="Aditya Be10x" oninput="recomputeHandler()" style="width:170px;"/>
+  </div>
+  <div class="alert-note">
+    <span class="alert-note-ico">ℹ️</span>
+    <span>Only messages sent to <strong>individual customers</strong> are shown. Broadcasts to Everyone and Hosts &amp; panelists are excluded.</span>
+  </div>
+  <div class="table-wrap"><div class="table-inner">
+    <table><thead><tr><th>Time</th><th>Handler</th><th>Replied To</th><th>Message</th></tr></thead>
+    <tbody id="handlerTbody"></tbody></table>
+  </div></div>
+  <div class="pagination">
+    <div class="page-info" id="handlerPageInfo"></div>
+    <div class="page-btns">
+      <button class="page-btn" onclick="changePage('handler',-1)">← Prev</button>
+      <button class="page-btn" onclick="changePage('handler',1)">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW: CONFIG -->
+<div id="view-config" style="display:none;">
+  <div class="sec-head">
+    <div class="sec-title">Issue Categories</div>
+    <span class="sec-badge">edit keywords · add categories</span>
+  </div>
+  <div id="configCards"></div>
+  <div class="sec-head" style="margin-top:24px;">
+    <div class="sec-title">Add New Category</div>
+  </div>
+  <div class="builder-card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div><div class="field-label">Category name</div><input class="inp inp-sm" id="newCatName" placeholder="e.g. Slide Issues"/></div>
+      <div><div class="field-label">Color style</div>
+        <select class="inp inp-sm" id="newCatColor">
+          <option value="badge-custom">Green</option><option value="badge-blur">Purple</option>
+          <option value="badge-audio">Amber</option><option value="badge-recorded">Red</option>
+          <option value="badge-network">Cyan</option><option value="badge-login">Blue</option>
+          <option value="badge-payment">Orange</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-label">Keywords <span style="font-weight:400;color:var(--text3)">(Enter or comma to add)</span></div>
+    <input class="inp inp-sm" id="newCatKwInput" placeholder="Type keyword and press Enter…" onkeydown="addKwTag(event)"/>
+    <div class="tags-wrap" id="newCatTags"></div>
+    <div style="margin-top:14px;display:flex;gap:8px;">
+      <button class="btn btn-primary btn-sm" onclick="addCustomCategory()">Add Category</button>
+      <button class="btn btn-secondary btn-sm" onclick="clearNewCat()">Clear</button>
+    </div>
+  </div>
+  <button class="btn btn-primary" style="margin-top:8px;" onclick="reanalyze();switchView('issues')">Re-analyze with Current Config →</button>
+</div>
+
+</main>
 </div>
 
 <script>
-// =========================================================
-//  STATE
-// =========================================================
-let allChats = [];          // parsed rows: {time, admin, replyTo, chat}
-let allIssues = [];         // {time, admin, replyTo, chat, category, include}
-let handlerRows = [];       // filtered handler replies
-let chatPage = 1, issuePage = 1, handlerPage = 1;
-const PAGE_SIZE = 50;
-let newCatKws = [];
-
-let CATEGORIES = [
-  { id: 'blur',     name: 'Blurry / Video',   badge: 'badge-blur',     keywords: ['blur','blurry','video quality','screen quality','not clear','not visible','can\'t see','cannot see','picture quality','poor quality','fuzzy','pixelated'] },
-  { id: 'audio',    name: 'Audio Issues',      badge: 'badge-audio',    keywords: ['audio','voice','sound','hear','hearing','audible','volume','mute','muted','speaker','mic','noise','echo','distort'] },
-  { id: 'recorded', name: 'Recorded Session',  badge: 'badge-recorded', keywords: ['recorded','not live','pre-recorded','prerecorded','playing old','not original','fake live','simulive','same video','seen before'] },
-  { id: 'network',  name: 'Network / Lag',     badge: 'badge-network',  keywords: ['lag','buffering','buffer','internet','network','connection','disconnect','reconnect','dropping','freeze','frozen','loading','slow','stuck'] },
-  { id: 'login',    name: 'Login / Access',    badge: 'badge-login',    keywords: ['login','log in','access','join','can\'t join','unable to join','link','password','otp','email','register','enrollment'] },
-  { id: 'payment',  name: 'Payment Issues',    badge: 'badge-payment',  keywords: ['payment','pay','paid','refund','charge','debit','credit','money','amount','receipt','invoice','transaction'] },
+let allChats=[],allIssues=[],handlerRows=[];
+let chatPage=1,issuePage=1,handlerPage=1;
+const PAGE=50;
+let newCatKws=[];
+let CATEGORIES=[
+  {id:'blur',   name:'Blurry / Video',   badge:'badge-blur',    ccls:'cc-purple',keywords:['blur','blurry','video quality','screen quality','not clear','not visible','cant see','cannot see','picture quality','poor quality','fuzzy','pixelated','screen issue','screen problem']},
+  {id:'audio',  name:'Audio Issues',     badge:'badge-audio',   ccls:'cc-amber', keywords:['audio','voice','sound','hear','hearing','audible','volume','mute','muted','speaker','mic','noise','echo','distort','not coming']},
+  {id:'recorded',name:'Recorded Session',badge:'badge-recorded',ccls:'cc-red',   keywords:['recorded','not live','pre-recorded','prerecorded','playing old','not original','fake live','simulive','same video','seen before']},
+  {id:'network',name:'Network / Lag',    badge:'badge-network', ccls:'cc-cyan',  keywords:['lag','buffering','buffer','internet','network','connection','disconnect','reconnect','dropping','freeze','frozen','loading','slow','stuck','bandwidth']},
+  {id:'login',  name:'Login / Access',   badge:'badge-login',   ccls:'cc-blue',  keywords:['login','log in','access','join','cant join','unable to join','link','password','otp','email','register','enrollment','not able to join']},
+  {id:'payment',name:'Payment Issues',   badge:'badge-payment', ccls:'cc-orange',keywords:['payment','pay','paid','refund','charge','debit','credit','money','amount','receipt','invoice','transaction','not received','didnt get']},
 ];
 
-// =========================================================
-//  PARSE  — Zoom two-line format:
-//    HH:MM:SS From [Name] to [Destination]:
-//    \t[message line 1]
-//    \t[message line 2 — continuation]
-// =========================================================
-function parseZoomChat(text) {
-  const rows = [];
-  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-
-  // Header line pattern: starts with HH:MM:SS followed by " From ... to ...:"
-  const headerRe = /^(\d{1,2}:\d{2}:\d{2})\s+[Ff]rom\s+(.+?)\s+[Tt]o\s+(.+?):\s*$/;
-
-  let current = null;  // { time, admin, replyTo, msgLines[] }
-
-  for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
-    const trimmed = raw.trim();
-
-    const hm = trimmed.match(headerRe);
-    if (hm) {
-      // Save previous record
-      if (current && current.msgLines.length > 0) {
-        rows.push({
-          time: current.time,
-          admin: current.admin,
-          replyTo: current.replyTo,
-          chat: current.msgLines.join(' ').trim()
-        });
-      }
-      current = {
-        time: hm[1],
-        admin: hm[2].trim(),
-        replyTo: hm[3].trim(),
-        msgLines: []
-      };
-    } else if (current !== null) {
-      // Continuation / message line — could be tab-indented or blank
-      if (trimmed.length > 0) {
-        current.msgLines.push(trimmed);
-      }
-      // blank lines between messages are ignored
-    }
-    // Lines before any header are skipped
+function parseZoomChat(text){
+  const rows=[];
+  const lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  const hr=/^(\d{1,2}:\d{2}:\d{2})\s+[Ff]rom\s+(.+?)\s+[Tt]o\s+(.+?):\s*$/;
+  let cur=null;
+  for(let i=0;i<lines.length;i++){
+    const t=lines[i].trim();
+    const hm=t.match(hr);
+    if(hm){
+      if(cur&&cur.m.length) rows.push({time:cur.time,admin:cur.admin,replyTo:cur.replyTo,chat:cur.m.join(' ').trim()});
+      cur={time:hm[1],admin:hm[2].trim(),replyTo:hm[3].trim(),m:[]};
+    } else if(cur&&t.length>0) cur.m.push(t);
   }
-
-  // Flush last record
-  if (current && current.msgLines.length > 0) {
-    rows.push({
-      time: current.time,
-      admin: current.admin,
-      replyTo: current.replyTo,
-      chat: current.msgLines.join(' ').trim()
-    });
-  }
-
+  if(cur&&cur.m.length) rows.push({time:cur.time,admin:cur.admin,replyTo:cur.replyTo,chat:cur.m.join(' ').trim()});
   return rows;
 }
 
-// =========================================================
-//  ISSUE DETECTION
-// =========================================================
-function detectIssues(rows) {
-  const issues = [];
-
-  for (const row of rows) {
-    const chatLower = row.chat.toLowerCase();
-
-    for (const cat of CATEGORIES) {
-      let matched = false;
-      for (const kw of cat.keywords) {
-        if (chatLower.includes(kw.toLowerCase())) {
-          matched = true;
-          break;
-        }
+function detectIssues(rows){
+  const issues=[];
+  for(const row of rows){
+    const cl=row.chat.toLowerCase();
+    for(const cat of CATEGORIES){
+      if(!cat.keywords.some(k=>cl.includes(k.toLowerCase()))) continue;
+      if(cat.id==='recorded'){
+        const excl=[/will (we|you|i|the session|this) (get|have|receive|send)/i,/send (me|us) (the )?record/i,/recording (available|link|please|send|share|provide)/i,/get (the )?recording/i,/share (the )?recording/i,/is (the )?session being recorded/i,/are you recording/i,/record kar/i,/record (ho|hoga|hogi|hua)/i];
+        const compl=[/this is (a |pre.?)?recorded/i,/session is (pre.?)?recorded/i,/not (a )?live/i,/pre.?recorded/i,/already (seen|watched|viewed)/i,/same (video|session|class)/i,/playing (old|previous|again)/i];
+        if(excl.some(p=>p.test(row.chat))&&!compl.some(p=>p.test(row.chat))) continue;
       }
-      if (!matched) continue;
-
-      // Special logic for "recorded" category
-      if (cat.id === 'recorded') {
-        // Exclude: requests for recording, questions about whether it will be recorded
-        const excludePatterns = [
-          /will (we|you|i|the session|this) (get|have|receive|send)/i,
-          /send (me|us) (the )?record/i,
-          /recording (available|link|please|send|share|provide|ho|milega|kab)/i,
-          /get (the )?recording/i,
-          /share (the )?recording/i,
-          /is (the )?session being recorded/i,
-          /are you recording/i,
-          /record kar/i,
-          /record (ho|hoga|hogi|hua)/i,
-          /session ka recording/i,
-          /\?/   // questions are often requests not complaints
-        ];
-        // Complaint patterns — must match at least one
-        const complaintPatterns = [
-          /this is (a |pre.?)?recorded/i,
-          /session is (pre.?)?recorded/i,
-          /not (a )?live/i,
-          /pre.?recorded/i,
-          /already (seen|watched|viewed)/i,
-          /same (video|session|class)/i,
-          /playing (old|previous|again)/i,
-          /pehle (se )?dekha/i,
-          /purani video/i,
-          /recorded (chal|play)/i
-        ];
-        const isRequest = excludePatterns.some(p => p.test(row.chat));
-        const isComplaint = complaintPatterns.some(p => p.test(row.chat));
-        if (isRequest && !isComplaint) continue;
-      }
-
-      issues.push({ ...row, category: cat.id, catName: cat.name, badge: cat.badge, include: true });
-      break; // one issue per row (first match)
+      issues.push({...row,category:cat.id,catName:cat.name,badge:cat.badge,include:true});
+      break;
     }
   }
   return issues;
 }
 
-// =========================================================
-//  HANDLER
-// =========================================================
-function getHandlerName() {
-  return (document.getElementById('handlerName')?.value || 'Aditya Be10x').trim();
-}
-
-function computeHandlerRows() {
-  const hName = getHandlerName().toLowerCase();
-  return allChats.filter(r => {
-    if (r.admin.toLowerCase() !== hName) return false;
-    const rt = r.replyTo.toLowerCase();
-    // Pure broadcasts — exclude
-    if (rt === 'everyone') return false;
-    if (rt === 'all') return false;
-    if (rt === 'hosts and panelists') return false;
-    // Personal replies: "Name, Hosts and panelists" or just a name
-    return true;
+function getHandlerName(){return(document.getElementById('handlerName')?.value||'Aditya Be10x').trim();}
+function computeHandlerRows(){
+  const h=getHandlerName().toLowerCase();
+  return allChats.filter(r=>{
+    if(r.admin.toLowerCase()!==h) return false;
+    const rt=r.replyTo.toLowerCase();
+    return rt!=='everyone'&&rt!=='all'&&rt!=='hosts and panelists';
   });
 }
+function recomputeHandler(){handlerRows=computeHandlerRows();document.getElementById('nc-handler').textContent=handlerRows.length;document.getElementById('tag-handler').textContent=handlerRows.length+' replies';renderHandlerTable();}
 
-function recomputeHandler() {
-  handlerRows = computeHandlerRows();
-  document.getElementById('nc-handler').textContent = handlerRows.length;
-  document.getElementById('tag-handler').textContent = handlerRows.length + ' replies';
-  renderHandlerTable();
-}
+function loadFile(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>processText(ev.target.result);r.readAsText(f,'UTF-8');}
+function handleDrop(e){e.preventDefault();document.getElementById('dropZone').classList.remove('drag');const f=e.dataTransfer.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>processText(ev.target.result);r.readAsText(f,'UTF-8');}
+function parseFromPaste(){const t=document.getElementById('pasteArea').value;if(!t.trim()){alert('Please paste chat content first.');return;}processText(t);}
 
-// =========================================================
-//  LOAD FILE
-// =========================================================
-function loadFile(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => processText(ev.target.result);
-  reader.readAsText(file, 'UTF-8');
-}
-
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('dropZone').classList.remove('drag');
-  const file = e.dataTransfer.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => processText(ev.target.result);
-  reader.readAsText(file, 'UTF-8');
-}
-
-function parseFromPaste() {
-  const txt = document.getElementById('pasteArea').value;
-  if (!txt.trim()) { alert('Please paste chat content first.'); return; }
-  processText(txt);
-}
-
-function processText(text) {
-  allChats = parseZoomChat(text);
-  if (allChats.length === 0) { alert('No valid chat rows found. Please check the file format.'); return; }
-  allIssues = detectIssues(allChats);
-  handlerRows = computeHandlerRows();
-  updateNavCounts();
-  updateStats();
-  populateIssueFilter();
-  buildCatGrid();
-  renderChatTable();
-  renderIssueTable();
-  renderHandlerTable();
-  document.getElementById('exportBar').style.display = 'block';
+function processText(text){
+  allChats=parseZoomChat(text);
+  if(!allChats.length){alert('No valid chat rows found.\n\nExpected format:\n"HH:MM:SS From Name to Destination:"\non line 1, then message on next line.');return;}
+  allIssues=detectIssues(allChats);
+  handlerRows=computeHandlerRows();
+  updateNavCounts();updateStats();populateIssueFilter();buildCatGrid();
+  renderChatTable();renderIssueTable();renderHandlerTable();
+  document.getElementById('exportBar').style.display='block';
+  document.getElementById('hdrStatus').textContent=allChats.length.toLocaleString()+' messages loaded';
   switchView('chat');
 }
 
-// =========================================================
-//  DEMO DATA
-// =========================================================
-function loadDemo() {
-  const demo = `00:01:12\tFrom Rahul Sharma to Everyone:\tAudio is not coming properly
-00:01:45\tFrom Priya Patel to Everyone:\tVideo is very blurry, can't see the slides
-00:02:03\tFrom Aditya Be10x to Rahul Sharma:\tPlease check your speaker settings
-00:02:30\tFrom Suresh Kumar to Everyone:\tThis is a recorded session, not live
-00:03:10\tFrom Aditya Be10x to Priya Patel:\tTry adjusting your video quality in settings
-00:03:45\tFrom Anita Singh to Everyone:\tWill we get the recording after this session?
-00:04:20\tFrom Vikram Reddy to Everyone:\tMy internet is lagging badly
-00:04:55\tFrom Aditya Be10x to Suresh Kumar:\tThis is 100% live session, happening right now
-00:05:30\tFrom Meera Joshi to Everyone:\tAudio is muted, can't hear anything
-00:06:10\tFrom Aditya Be10x to Vikram Reddy:\tPlease try reconnecting your internet
-00:06:45\tFrom Rohit Gupta to Everyone:\tScreen is completely blurry
-00:07:20\tFrom Kavya Nair to Everyone:\tPayment done but not able to login
-00:08:00\tFrom Aditya Be10x to Meera Joshi:\tPlease unmute from your end
-00:08:35\tFrom Deepak Tiwari to Everyone:\tSame video was shown last week too
-00:09:10\tFrom Aditya Be10x to Kavya Nair:\tPlease share your registered email, will check
-00:09:45\tFrom Sunita Yadav to Everyone:\tIs this session being recorded?
-00:10:20\tFrom Arjun Mehta to Everyone:\tVoice is breaking, not audible
-00:11:00\tFrom Aditya Be10x to Arjun Mehta:\tPlease rejoin the zoom call
-00:11:35\tFrom Pooja Verma to Everyone:\tNetwork is too slow, keeps buffering
-00:12:10\tFrom Ravi Choudhary to Everyone:\tCan you send the recording after class?`;
-  document.getElementById('pasteArea').value = demo;
-  processText(demo);
+function loadDemo(){
+  const d=`10:46:56 From ved mendapara to Hosts and panelists:\n\thello ???\n10:47:51 From Aditya Be10x to Everyone:\n\tWe'll be starting at 11:00 AM!\n10:53:07 From Aditya Be10x to Rakesh Yadav, Hosts and panelists:\n\tAll of you will get the certificate after the workshop.\n11:01:12 From Rahul Sharma to Hosts and panelists:\n\tAudio is not coming properly\n11:02:45 From Priya Patel to Hosts and panelists:\n\tVideo is very blurry, can't see the slides\n11:03:00 From Aditya Be10x to Priya Patel, Hosts and panelists:\n\tTry adjusting your video quality in settings\n11:04:30 From Suresh Kumar to Hosts and panelists:\n\tThis is a recorded session, not live\n11:05:10 From Aditya Be10x to Suresh Kumar, Hosts and panelists:\n\tThis is 100% live right now\n11:06:45 From Anita Singh to Hosts and panelists:\n\tWill we get the recording after this session?\n11:07:20 From Vikram Reddy to Hosts and panelists:\n\tMy internet is lagging badly, keeps buffering\n11:08:55 From Meera Joshi to Hosts and panelists:\n\tAudio is muted, can't hear anything\n11:10:05 From Rohit Gupta to Hosts and panelists:\n\tScreen is completely blurry\n11:11:20 From Kavya Nair to Hosts and panelists:\n\tPayment done but not able to login\n11:13:35 From Deepak Tiwari to Hosts and panelists:\n\tSame video was shown last week, pre-recorded\n11:15:45 From Arjun Mehta to Hosts and panelists:\n\tVoice is breaking, not audible at all\n11:17:35 From Pooja Verma to Hosts and panelists:\n\tNetwork is too slow, keeps freezing`;
+  document.getElementById('pasteArea').value=d;processText(d);
 }
 
-// =========================================================
-//  RENDER TABLES
-// =========================================================
-function renderChatTable() {
-  const q = (document.getElementById('chatSearch')?.value || '').toLowerCase();
-  const filtered = allChats.filter(r =>
-    !q || r.chat.toLowerCase().includes(q) || r.admin.toLowerCase().includes(q)
-  );
-  const total = filtered.length;
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  chatPage = Math.min(chatPage, pages);
-  const slice = filtered.slice((chatPage - 1) * PAGE_SIZE, chatPage * PAGE_SIZE);
+const ACOLORS=['#6366f1','#22d3ee','#10b981','#f59e0b','#ef4444','#ec4899','#a78bfa','#34d399','#fb923c','#38bdf8'];
+function avatarColor(n){let h=0;for(let i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%ACOLORS.length;return ACOLORS[h];}
+function initials(n){const p=n.split(' ');return((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase();}
 
-  const tbody = document.getElementById('chatTbody');
-  tbody.innerHTML = slice.map(r => `
-    <tr>
-      <td class="time-cell">${esc(r.time)}</td>
-      <td class="admin-cell">${esc(r.admin)}</td>
-      <td class="reply-cell">${esc(r.replyTo)}</td>
-      <td class="chat-cell">${esc(r.chat)}</td>
-    </tr>`).join('');
-
-  document.getElementById('chatPageInfo').textContent = `${(chatPage-1)*PAGE_SIZE+1}–${Math.min(chatPage*PAGE_SIZE, total)} of ${total}`;
-  document.getElementById('tag-chat').textContent = `${allChats.length} messages`;
+function renderChatTable(){
+  const q=(document.getElementById('chatSearch')?.value||'').toLowerCase();
+  const fil=allChats.filter(r=>!q||r.chat.toLowerCase().includes(q)||r.admin.toLowerCase().includes(q));
+  const tot=fil.length;chatPage=Math.min(chatPage,Math.max(1,Math.ceil(tot/PAGE)));
+  const sl=fil.slice((chatPage-1)*PAGE,chatPage*PAGE);
+  document.getElementById('chatTbody').innerHTML=sl.map(r=>{const c=avatarColor(r.admin);return`<tr><td class="td-time">${esc(r.time)}</td><td class="td-name"><span class="avatar" style="background:${c}22;color:${c}">${initials(r.admin)}</span>${esc(r.admin)}</td><td class="td-to">${esc(r.replyTo)}</td><td class="td-chat">${esc(r.chat)}</td></tr>`;}).join('');
+  document.getElementById('chatPageInfo').textContent=`${Math.min((chatPage-1)*PAGE+1,Math.max(1,tot))}–${Math.min(chatPage*PAGE,tot)} of ${tot.toLocaleString()}`;
+  document.getElementById('tag-chat').textContent=allChats.length.toLocaleString()+' messages';
 }
 
-function renderIssueTable() {
-  const q = (document.getElementById('issueSearch')?.value || '').toLowerCase();
-  const f = document.getElementById('issueFilter')?.value || 'all';
-  const filtered = allIssues.filter(r =>
-    (f === 'all' || r.category === f) &&
-    (!q || r.chat.toLowerCase().includes(q) || r.admin.toLowerCase().includes(q))
-  );
-  const total = filtered.length;
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  issuePage = Math.min(issuePage, pages);
-  const slice = filtered.slice((issuePage - 1) * PAGE_SIZE, issuePage * PAGE_SIZE);
-
-  const tbody = document.getElementById('issueTbody');
-  if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:32px; color:var(--text3);">No issues found</td></tr>`;
-  } else {
-    tbody.innerHTML = slice.map((r, idx) => {
-      const gi = allIssues.indexOf(r);
-      return `<tr>
-        <td class="time-cell">${esc(r.time)}</td>
-        <td class="admin-cell">${esc(r.admin)}</td>
-        <td class="reply-cell">${esc(r.replyTo)}</td>
-        <td class="chat-cell">${esc(r.chat)}</td>
-        <td><span class="badge ${r.badge}">${esc(r.catName)}</span></td>
-        <td>
-          <div class="toggle-row" onclick="toggleIssue(${gi})">
-            <div class="toggle ${r.include ? 'on' : ''}"></div>
-          </div>
-        </td>
-      </tr>`;
-    }).join('');
-  }
-
-  const included = allIssues.filter(r => r.include).length;
-  document.getElementById('issuePageInfo').textContent = `${(issuePage-1)*PAGE_SIZE+1}–${Math.min(issuePage*PAGE_SIZE, total)} of ${total}`;
-  document.getElementById('tag-issues').textContent = `${included} issues included`;
+function renderIssueTable(){
+  const q=(document.getElementById('issueSearch')?.value||'').toLowerCase();
+  const f=document.getElementById('issueFilter')?.value||'all';
+  const fil=allIssues.filter(r=>(f==='all'||r.category===f)&&(!q||r.chat.toLowerCase().includes(q)||r.admin.toLowerCase().includes(q)));
+  const tot=fil.length;issuePage=Math.min(issuePage,Math.max(1,Math.ceil(tot/PAGE)));
+  const sl=fil.slice((issuePage-1)*PAGE,issuePage*PAGE);
+  const included=allIssues.filter(r=>r.include).length;
+  document.getElementById('tag-issues').textContent=included+' issues included';
+  document.getElementById('tag-issues-count').textContent=tot+' showing';
+  document.getElementById('issueTbody').innerHTML=!fil.length?`<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-txt">No issues found</div><div class="empty-sub2">Try changing the filter or search term</div></div></td></tr>`:sl.map(r=>{const gi=allIssues.indexOf(r);const c=avatarColor(r.admin);return`<tr><td class="td-time">${esc(r.time)}</td><td class="td-name"><span class="avatar" style="background:${c}22;color:${c}">${initials(r.admin)}</span>${esc(r.admin)}</td><td class="td-to">${esc(r.replyTo)}</td><td class="td-chat">${esc(r.chat)}</td><td><span class="badge ${r.badge}">${esc(r.catName)}</span></td><td><div class="toggle-wrap" onclick="toggleIssue(${gi})"><div class="toggle ${r.include?'on':''}"></div></div></td></tr>`;}).join('');
+  document.getElementById('issuePageInfo').textContent=`${Math.min((issuePage-1)*PAGE+1,Math.max(1,tot))}–${Math.min(issuePage*PAGE,tot)} of ${tot.toLocaleString()}`;
   buildCatGrid();
 }
 
-function renderHandlerTable() {
-  const rows = handlerRows;
-  const total = rows.length;
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  handlerPage = Math.min(handlerPage, pages);
-  const slice = rows.slice((handlerPage - 1) * PAGE_SIZE, handlerPage * PAGE_SIZE);
-
-  const tbody = document.getElementById('handlerTbody');
-  tbody.innerHTML = slice.map(r => `
-    <tr>
-      <td class="time-cell">${esc(r.time)}</td>
-      <td><span class="handler-chip">${esc(r.admin)}</span></td>
-      <td class="admin-cell">${esc(r.replyTo)}</td>
-      <td class="chat-cell">${esc(r.chat)}</td>
-    </tr>`).join('');
-
-  document.getElementById('handlerPageInfo').textContent = `${Math.min((handlerPage-1)*PAGE_SIZE+1, total)}–${Math.min(handlerPage*PAGE_SIZE, total)} of ${total}`;
-  document.getElementById('tag-handler').textContent = total + ' replies';
+function renderHandlerTable(){
+  const rows=handlerRows,tot=rows.length;
+  handlerPage=Math.min(handlerPage,Math.max(1,Math.ceil(tot/PAGE)));
+  const sl=rows.slice((handlerPage-1)*PAGE,handlerPage*PAGE);
+  document.getElementById('handlerTbody').innerHTML=sl.map(r=>`<tr><td class="td-time">${esc(r.time)}</td><td><span class="handler-chip"><span class="handler-dot"></span>${esc(r.admin)}</span></td><td class="td-name">${esc(r.replyTo.replace(', Hosts and panelists',''))}</td><td class="td-chat">${esc(r.chat)}</td></tr>`).join('');
+  document.getElementById('handlerPageInfo').textContent=`${Math.min((handlerPage-1)*PAGE+1,Math.max(1,tot))}–${Math.min(handlerPage*PAGE,tot)} of ${tot.toLocaleString()}`;
+  document.getElementById('tag-handler').textContent=tot.toLocaleString()+' replies';
 }
 
-// =========================================================
-//  CATEGORY GRID
-// =========================================================
-function buildCatGrid() {
-  const el = document.getElementById('catGrid');
-  if (!el) return;
-  el.innerHTML = CATEGORIES.map(cat => {
-    const count = allIssues.filter(r => r.category === cat.id && r.include).length;
-    const total = allIssues.filter(r => r.category === cat.id).length;
-    return `<div class="cat-card" onclick="filterByCategory('${cat.id}')">
-      <div class="cat-name">${cat.name}</div>
-      <div class="cat-kw">${cat.keywords.slice(0,4).join(', ')}…</div>
-      <div class="cat-count c-${catColor(cat.badge)}">${count}<span style="font-size:12px;color:var(--text3);font-weight:400;"> / ${total}</span></div>
-    </div>`;
+function buildCatGrid(){
+  const el=document.getElementById('catGrid');if(!el)return;
+  const ti=Math.max(allIssues.length,1);
+  el.innerHTML=CATEGORIES.map(cat=>{
+    const inc=allIssues.filter(r=>r.category===cat.id&&r.include).length;
+    const tot=allIssues.filter(r=>r.category===cat.id).length;
+    const pct=Math.round((tot/ti)*100);
+    return`<div class="cat-card ${cat.ccls}" onclick="filterByCat('${cat.id}')"><div class="cat-name">${cat.name}</div><div class="cat-kw">${cat.keywords.slice(0,4).join(', ')}…</div><div class="cat-count-row"><span class="cat-num">${inc}</span><span class="cat-total">/ ${tot} flagged</span></div><div class="cat-bar"><div class="cat-bar-fill" style="width:${pct}%"></div></div></div>`;
   }).join('');
 }
 
-function catColor(badge) {
-  const map = { 'badge-blur':'purple','badge-audio':'amber','badge-recorded':'red','badge-network':'teal','badge-login':'blue','badge-payment':'red','badge-custom':'green','badge-feedback':'' };
-  return map[badge] || 'blue';
+function filterByCat(id){document.getElementById('issueFilter').value=id;renderIssueTable();}
+function populateIssueFilter(){const s=document.getElementById('issueFilter');s.innerHTML='<option value="all">All Categories</option>';CATEGORIES.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;s.appendChild(o);});}
+
+function renderConfigCards(){
+  document.getElementById('configCards').innerHTML=CATEGORIES.map((cat,i)=>`<div class="builder-card"><div class="builder-card-head"><span class="badge ${cat.badge}">${cat.name}</span><span style="font-size:11px;color:var(--text3);font-family:var(--mono);">id: ${cat.id}</span><div style="margin-left:auto;"><button class="btn btn-secondary btn-xs" onclick="removeCat(${i})">Remove</button></div></div><div class="field-label">Keywords</div><div class="tags-wrap">${cat.keywords.map((kw,ki)=>`<span class="kw-tag">${kw}<span class="kw-rm" onclick="removeKw(${i},${ki})">×</span></span>`).join('')}</div><div style="margin-top:10px;display:flex;gap:8px;"><input class="inp inp-sm" id="kw-add-${i}" placeholder="Add keyword…" style="flex:1;" onkeydown="if(event.key==='Enter')addKwToCat(${i})"/><button class="btn btn-secondary btn-xs" onclick="addKwToCat(${i})">+ Add</button></div></div>`).join('');
+}
+function removeKw(ci,ki){CATEGORIES[ci].keywords.splice(ki,1);renderConfigCards();}
+function addKwToCat(ci){const inp=document.getElementById(`kw-add-${ci}`);const v=inp.value.trim();if(!v)return;CATEGORIES[ci].keywords.push(v);inp.value='';renderConfigCards();}
+function removeCat(i){if(!confirm(`Remove category "${CATEGORIES[i].name}"?`))return;CATEGORIES.splice(i,1);renderConfigCards();populateIssueFilter();}
+function addKwTag(e){if(e.key!=='Enter'&&e.key!==',')return;e.preventDefault();const inp=document.getElementById('newCatKwInput');const v=inp.value.replace(',','').trim();if(!v||newCatKws.includes(v))return;newCatKws.push(v);inp.value='';renderNewTags();}
+function renderNewTags(){document.getElementById('newCatTags').innerHTML=newCatKws.map((kw,i)=>`<span class="kw-tag">${kw}<span class="kw-rm" onclick="newCatKws.splice(${i},1);renderNewTags()">×</span></span>`).join('');}
+function addCustomCategory(){const name=document.getElementById('newCatName').value.trim();const badge=document.getElementById('newCatColor').value;if(!name||!newCatKws.length){alert('Please add a name and at least one keyword.');return;}const id=name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');CATEGORIES.push({id,name,badge,ccls:'cc-green',keywords:[...newCatKws]});clearNewCat();renderConfigCards();populateIssueFilter();alert(`Category "${name}" added! Click Re-analyze to apply.`);}
+function clearNewCat(){document.getElementById('newCatName').value='';newCatKws=[];renderNewTags();}
+function reanalyze(){allIssues=detectIssues(allChats);updateNavCounts();buildCatGrid();populateIssueFilter();renderIssueTable();}
+
+function updateStats(){
+  const uniq=new Set(allChats.map(r=>r.admin)).size;
+  const hName=getHandlerName().toLowerCase();
+  const cust=allChats.filter(r=>r.admin.toLowerCase()!==hName).length;
+  const issCnt=allIssues.filter(r=>r.include).length;
+  const hRep=computeHandlerRows().length;
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-card sc-blue"><div class="stat-ico">💬</div><div class="stat-val">${allChats.length.toLocaleString()}</div><div class="stat-lbl">Total Chats</div><div class="stat-sub2">${uniq.toLocaleString()} unique senders</div></div>
+    <div class="stat-card sc-cyan"><div class="stat-ico">👥</div><div class="stat-val">${cust.toLocaleString()}</div><div class="stat-lbl">Customer Chats</div><div class="stat-sub2">Handler excluded</div></div>
+    <div class="stat-card sc-red"><div class="stat-ico">⚠️</div><div class="stat-val">${issCnt.toLocaleString()}</div><div class="stat-lbl">Issues Flagged</div><div class="stat-sub2">Across ${CATEGORIES.length} categories</div></div>
+    <div class="stat-card sc-green"><div class="stat-ico">💬</div><div class="stat-val">${hRep.toLocaleString()}</div><div class="stat-lbl">Handler Replies</div><div class="stat-sub2">Personal replies only</div></div>`;
+}
+function updateNavCounts(){document.getElementById('nc-chat').textContent=allChats.length.toLocaleString();document.getElementById('nc-issues').textContent=allIssues.filter(r=>r.include).length;document.getElementById('nc-handler').textContent=computeHandlerRows().length;}
+function changePage(v,d){if(v==='chat'){chatPage=Math.max(1,chatPage+d);renderChatTable();}else if(v==='issue'){issuePage=Math.max(1,issuePage+d);renderIssueTable();}else if(v==='handler'){handlerPage=Math.max(1,handlerPage+d);renderHandlerTable();}}
+function toggleIssue(idx){allIssues[idx].include=!allIssues[idx].include;updateNavCounts();renderIssueTable();}
+
+function exportXLSX(){
+  if(!allChats.length){alert('No data to export.');return;}
+  const wb=XLSX.utils.book_new();
+  const cd=[['Time','Admin','Replied To','Chat']];allChats.forEach(r=>cd.push([r.time,r.admin,r.replyTo,r.chat]));
+  const wsC=XLSX.utils.aoa_to_sheet(cd);wsC['!cols']=[{wch:10},{wch:24},{wch:24},{wch:58}];XLSX.utils.book_append_sheet(wb,wsC,'Total Chat');
+  const hName=getHandlerName().toLowerCase();
+  const id2=[['Time','Admin','Replied To','Chat','Issue Category']];allIssues.filter(r=>r.include&&r.admin.toLowerCase()!==hName).forEach(r=>id2.push([r.time,r.admin,r.replyTo,r.chat,r.catName]));
+  const wsI=XLSX.utils.aoa_to_sheet(id2);wsI['!cols']=[{wch:10},{wch:24},{wch:24},{wch:58},{wch:20}];XLSX.utils.book_append_sheet(wb,wsI,'Total Issues');
+  const hd=[['Time','Handler','Replied To','Message']];computeHandlerRows().forEach(r=>hd.push([r.time,r.admin,r.replyTo,r.chat]));
+  const wsH=XLSX.utils.aoa_to_sheet(hd);wsH['!cols']=[{wch:10},{wch:20},{wch:30},{wch:60}];XLSX.utils.book_append_sheet(wb,wsH,'Handler Replies');
+  XLSX.writeFile(wb,'Zoom_Savechat_Analysis.xlsx');
 }
 
-function filterByCategory(id) {
-  document.getElementById('issueFilter').value = id;
-  renderIssueTable();
-}
-
-function populateIssueFilter() {
-  const sel = document.getElementById('issueFilter');
-  sel.innerHTML = '<option value="all">All Issues</option>';
-  CATEGORIES.forEach(c => {
-    const o = document.createElement('option');
-    o.value = c.id; o.textContent = c.name;
-    sel.appendChild(o);
+function switchView(v){
+  ['upload','chat','issues','handler','config'].forEach(n=>{
+    document.getElementById('view-'+n).style.display=n===v?'block':'none';
+    document.getElementById('nav-'+n)?.classList.toggle('active',n===v);
   });
+  if(v==='config') renderConfigCards();
 }
 
-// =========================================================
-//  CONFIG CARDS
-// =========================================================
-function renderConfigCards() {
-  const el = document.getElementById('configCards');
-  el.innerHTML = CATEGORIES.map((cat, i) => `
-    <div class="custom-builder" style="padding:14px;">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-        <span class="badge ${cat.badge}">${cat.name}</span>
-        <span style="font-size:12px; color:var(--text2);">ID: ${cat.id}</span>
-        <div style="margin-left:auto;">
-          ${i >= 0 ? `<button class="btn btn-secondary btn-sm" onclick="removeCat(${i})">Remove</button>` : ''}
-        </div>
-      </div>
-      <div style="font-size:11px; color:var(--text2); margin-bottom:6px;">Keywords</div>
-      <div class="tags-wrap">
-        ${cat.keywords.map((kw, ki) => `
-          <span class="custom-tag">${kw}
-            <span class="custom-tag-remove" onclick="removeKw(${i},${ki})">×</span>
-          </span>`).join('')}
-      </div>
-      <div style="margin-top:8px; display:flex; gap:8px;">
-        <input class="input" id="kw-add-${i}" placeholder="Add keyword..." style="flex:1;" onkeydown="if(event.key==='Enter'){addKwToCat(${i})}"/>
-        <button class="btn btn-secondary btn-sm" onclick="addKwToCat(${i})">+ Add</button>
-      </div>
-    </div>`).join('');
-}
-
-function removeKw(catIdx, kwIdx) {
-  CATEGORIES[catIdx].keywords.splice(kwIdx, 1);
-  renderConfigCards();
-}
-
-function addKwToCat(catIdx) {
-  const inp = document.getElementById(`kw-add-${catIdx}`);
-  const val = inp.value.trim();
-  if (!val) return;
-  CATEGORIES[catIdx].keywords.push(val);
-  inp.value = '';
-  renderConfigCards();
-}
-
-function removeCat(i) {
-  if (!confirm(`Remove category "${CATEGORIES[i].name}"?`)) return;
-  CATEGORIES.splice(i, 1);
-  renderConfigCards();
-  populateIssueFilter();
-}
-
-// =========================================================
-//  CUSTOM CATEGORY
-// =========================================================
-function addKwTag(e) {
-  if (e.key !== 'Enter' && e.key !== ',') return;
-  e.preventDefault();
-  const inp = document.getElementById('newCatKwInput');
-  const val = inp.value.replace(',','').trim();
-  if (!val || newCatKws.includes(val)) return;
-  newCatKws.push(val);
-  inp.value = '';
-  renderNewTags();
-}
-
-function renderNewTags() {
-  document.getElementById('newCatTags').innerHTML = newCatKws.map((kw, i) =>
-    `<span class="custom-tag">${kw}<span class="custom-tag-remove" onclick="newCatKws.splice(${i},1);renderNewTags()">×</span></span>`
-  ).join('');
-}
-
-function addCustomCategory() {
-  const name = document.getElementById('newCatName').value.trim();
-  const badge = document.getElementById('newCatColor').value;
-  if (!name || newCatKws.length === 0) { alert('Please enter a name and at least one keyword.'); return; }
-  const id = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-  CATEGORIES.push({ id, name, badge, keywords: [...newCatKws] });
-  clearNewCat();
-  renderConfigCards();
-  populateIssueFilter();
-  alert(`Category "${name}" added! Click Re-analyze to apply.`);
-}
-
-function clearNewCat() {
-  document.getElementById('newCatName').value = '';
-  newCatKws = [];
-  renderNewTags();
-}
-
-function reanalyze() {
-  allIssues = detectIssues(allChats);
-  updateNavCounts();
-  buildCatGrid();
-  populateIssueFilter();
-  renderIssueTable();
-}
-
-// =========================================================
-//  STATS
-// =========================================================
-function updateStats() {
-  const uniqueSenders = new Set(allChats.map(r => r.admin)).size;
-  const handlerName = getHandlerName().toLowerCase();
-  const customerChats = allChats.filter(r => r.admin.toLowerCase() !== handlerName).length;
-  const issueCount = allIssues.filter(r => r.include).length;
-  const hReplies = computeHandlerRows().length;
-
-  document.getElementById('statsRow').innerHTML = `
-    <div class="stat-card"><div class="stat-label">TOTAL CHATS</div><div class="stat-value c-blue">${allChats.length}</div><div class="stat-sub">${uniqueSenders} unique senders</div></div>
-    <div class="stat-card"><div class="stat-label">CUSTOMER CHATS</div><div class="stat-value c-teal">${customerChats}</div><div class="stat-sub">excluding handler</div></div>
-    <div class="stat-card"><div class="stat-label">ISSUES FLAGGED</div><div class="stat-value c-red">${issueCount}</div><div class="stat-sub">across ${CATEGORIES.length} categories</div></div>
-    <div class="stat-card"><div class="stat-label">HANDLER REPLIES</div><div class="stat-value c-green">${hReplies}</div><div class="stat-sub">personal replies only</div></div>`;
-}
-
-function updateNavCounts() {
-  document.getElementById('nc-chat').textContent = allChats.length;
-  document.getElementById('nc-issues').textContent = allIssues.filter(r => r.include).length;
-  document.getElementById('nc-handler').textContent = computeHandlerRows().length;
-}
-
-// =========================================================
-//  PAGINATION
-// =========================================================
-function changePage(view, dir) {
-  if (view === 'chat') { chatPage = Math.max(1, chatPage + dir); renderChatTable(); }
-  else if (view === 'issue') { issuePage = Math.max(1, issuePage + dir); renderIssueTable(); }
-  else if (view === 'handler') { handlerPage = Math.max(1, handlerPage + dir); renderHandlerTable(); }
-}
-
-// =========================================================
-//  TOGGLE ISSUE INCLUSION
-// =========================================================
-function toggleIssue(idx) {
-  allIssues[idx].include = !allIssues[idx].include;
-  updateNavCounts();
-  renderIssueTable();
-}
-
-// =========================================================
-//  EXPORT XLSX
-// =========================================================
-function exportXLSX() {
-  if (!allChats.length) { alert('No data to export.'); return; }
-
-  const wb = XLSX.utils.book_new();
-
-  // Sheet 1: Total Chat
-  const chatData = [['Time','Admin','Replied To','Chat']];
-  allChats.forEach(r => chatData.push([r.time, r.admin, r.replyTo, r.chat]));
-  const wsChat = XLSX.utils.aoa_to_sheet(chatData);
-  styleSheet(wsChat, chatData.length);
-  XLSX.utils.book_append_sheet(wb, wsChat, 'Total Chat');
-
-  // Sheet 2: Total Issues (exclude handler)
-  const hName = getHandlerName().toLowerCase();
-  const issData = [['Time','Admin','Replied To','Chat','Issue Category']];
-  allIssues.filter(r => r.include && r.admin.toLowerCase() !== hName)
-    .forEach(r => issData.push([r.time, r.admin, r.replyTo, r.chat, r.catName]));
-  const wsIss = XLSX.utils.aoa_to_sheet(issData);
-  styleSheet(wsIss, issData.length);
-  XLSX.utils.book_append_sheet(wb, wsIss, 'Total Issues');
-
-  // Sheet 3: Handler Replies
-  const handData = [['Time','Handler','Replied To','Message']];
-  computeHandlerRows().forEach(r => handData.push([r.time, r.admin, r.replyTo, r.chat]));
-  const wsHand = XLSX.utils.aoa_to_sheet(handData);
-  styleSheet(wsHand, handData.length);
-  XLSX.utils.book_append_sheet(wb, wsHand, 'Handler Replies');
-
-  XLSX.writeFile(wb, 'Zoom_Savechat_Analysis.xlsx');
-}
-
-function styleSheet(ws, rowCount) {
-  ws['!cols'] = [
-    { wch: 10 }, { wch: 22 }, { wch: 22 }, { wch: 55 }, { wch: 20 }
-  ];
-}
-
-// =========================================================
-//  NAVIGATION
-// =========================================================
-function switchView(view) {
-  ['upload','chat','issues','handler','config'].forEach(v => {
-    document.getElementById('view-'+v).style.display = v === view ? 'block' : 'none';
-    document.getElementById('nav-'+v)?.classList.toggle('active', v === view);
-  });
-  if (view === 'config') renderConfigCards();
-}
-
-// =========================================================
-//  UTILS
-// =========================================================
-function esc(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 </script>
 </body>
 </html>
