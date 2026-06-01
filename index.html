@@ -172,10 +172,22 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
 .mand-stat{display:flex;flex-direction:column;gap:2px;}
 .mand-stat-val{font-size:18px;font-weight:700;font-family:var(--mono);}
 .mand-stat-lbl{font-size:11px;color:var(--text3);}
+/* ── Spam ── */
+.spam-banner{background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.2);border-radius:var(--r);padding:10px 16px;display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:13px;color:#fdba74;}
+.spam-banner-ico{font-size:15px;flex-shrink:0;}
+.spam-banner-text{flex:1;line-height:1.5;}
+.spam-banner strong{color:#fb923c;}
+.spam-row td{opacity:0.55;}
+.badge-spam{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(251,146,60,0.15);color:#fdba74;border:1px solid rgba(251,146,60,0.25);font-family:var(--mono);font-weight:600;vertical-align:middle;margin-left:6px;}
+.sc-orange::before{background:linear-gradient(90deg,#fb923c,#f97316);}
+.sc-orange .stat-ico{background:rgba(251,146,60,0.12);}
+.sc-orange .stat-val{color:#fb923c;}
 .cat-tag{font-size:10px;padding:2px 7px;border-radius:3px;font-family:var(--mono);font-weight:500;background:var(--surface3);color:var(--text2);white-space:nowrap;}
 .mand-time-chip{font-size:11px;font-family:var(--mono);color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 7px;white-space:nowrap;}
 .badge-promo{background:rgba(244,63,94,0.1);color:#fda4af;border:1px solid rgba(244,63,94,0.2);}.badge-promo::before{background:#f43f5e;}
 .cc-rose .cat-name{color:#fb7185;}.cc-rose .cat-num{color:#fb7185;}.cc-rose .cat-bar-fill,.cc-rose::after{background:#f43f5e;}
+.badge-cert{background:rgba(132,204,22,0.1);color:#bef264;border:1px solid rgba(132,204,22,0.2);}.badge-cert::before{background:#84cc16;}
+.cc-lime .cat-name{color:#a3e635;}.cc-lime .cat-num{color:#a3e635;}.cc-lime .cat-bar-fill,.cc-lime::after{background:#84cc16;}
 
 /* HANDLER CHIP */
 .handler-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.22);border-radius:6px;padding:3px 9px;font-size:12px;color:#a5b4fc;font-weight:600;}
@@ -353,14 +365,33 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
 <!-- VIEW: TOTAL CHAT -->
 <div id="view-chat" style="display:none;">
   <div id="statsRow" class="stats-row"></div>
+  <!-- spam banner — shown only when spam was removed -->
+  <div id="spamBanner" style="display:none;" class="spam-banner">
+    <span class="spam-banner-ico">🧹</span>
+    <div class="spam-banner-text">
+      <strong id="spamBannerCount">0</strong> spam messages detected from <strong id="spamBannerSenders">0</strong> senders
+      (same message sent repeatedly within 2 min). All messages are kept in Total Chat —
+      spam is <strong>excluded from Issues only</strong>.
+    </div>
+    <button class="btn btn-secondary btn-xs" onclick="switchChatTab('spam')">View removed →</button>
+  </div>
+
+  <!-- tabs -->
   <div class="sec-head">
     <div class="sec-title">Total Chat</div>
     <span class="sec-badge" id="tag-chat">0 messages</span>
     <div class="sec-spacer"></div>
-    <input class="inp inp-sm" id="chatSearch" placeholder="Search messages…" oninput="renderChatTable()" style="width:220px;"/>
+    <div class="tabs" id="chatTabsWrap" style="margin-bottom:0;">
+      <div class="tab active" id="tab-clean" onclick="switchChatTab('clean')">All Messages</div>
+      <div class="tab" id="tab-spam" onclick="switchChatTab('spam')">
+        Spam Removed <span id="tab-spam-count" style="font-size:11px;opacity:0.7;"></span>
+      </div>
+    </div>
+    <input class="inp inp-sm" id="chatSearch" placeholder="Search messages…" oninput="renderChatTable()" style="width:200px;margin-left:8px;"/>
   </div>
+
   <div class="table-wrap"><div class="table-inner">
-    <table><thead><tr><th>Time</th><th>From</th><th>To</th><th>Message</th></tr></thead>
+    <table><thead><tr><th>Time</th><th>From</th><th>To</th><th>Message</th><th id="spamColHead" style="display:none;">Spam</th></tr></thead>
     <tbody id="chatTbody"></tbody></table>
   </div></div>
   <div class="pagination">
@@ -503,10 +534,12 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
 </div>
 
 <script>
-let allChats=[],allIssues=[],handlerRows=[];
+let allChats=[],allIssues=[],handlerRows=[],spamChats=[];
 let chatPage=1,issuePage=1,handlerPage=1;
 const PAGE=50;
 let newCatKws=[];
+let chatTabMode='clean'; // 'clean' | 'spam'
+let certLinkSentSecs=null; // timestamp (seconds) when handler first sent cert link to Everyone
 let CATEGORIES=[
   // ─── Blurry / Video ───────────────────────────────────────────────────────
   {id:'blur',name:'Blurry / Video',badge:'badge-blur',ccls:'cc-purple',
@@ -559,6 +592,43 @@ let CATEGORIES=[
   {id:'network',name:'Network / Lag',badge:'badge-network',ccls:'cc-cyan',
    keywords:['lag','buffering','buffer','internet','network','connection','disconnect',
              'reconnect','dropping','freeze','frozen','loading','slow','stuck','bandwidth']},
+
+  // ─── Certificate / Link Issues ───────────────────────────────────────────
+  // Attendees reporting errors after the certificate link is sent.
+  // Placed BEFORE Login/Access so cert-specific messages are caught here first.
+  {id:'cert',name:'Certificate / Link Issues',badge:'badge-cert',ccls:'cc-lime',
+   keywords:[
+     // Direct certificate reference
+     'certificate','certx',
+     // Generation failures
+     'not able to generate','unable to generate','cant generate','cannot generate',
+     // Form failures (the cert page renders as a form)
+     'form is not','form not loading','form not working','form is loading',
+     // Error state messages
+     'something went wrong','something wrong',
+     'server is crashing','server crash','server crashing',
+     'showing something error','shows something wrong','shows something error',
+     'something error',
+     // Link / URL open failures
+     'url is not working','url not working',
+     'not able to open','did not open','link not opening',
+     'not opening','website not opening','site not working','page not loading',
+     // Generic link complaint phrases (for cert context)
+     'link is not working','link not working for me','link not working',
+     'that link is not working','the link is not working',
+     'link shows something','form shows error'
+   ],
+   // Exclude: people asking for the link (not reporting a problem with it)
+   excl:[
+     /(send|share|give|provide|what is|where is)\s+(me\s+)?(the\s+)?(cert|certificate|link)/i,
+     /(can\s+(you|we)|please)\s+(send|share|provide)/i,
+     /(want|need|looking for)\s+(the\s+)?(cert|certificate|link)/i,
+     // Positive confirmations — certificate successfully received/generated
+     /(got|received|generated|downloaded|completed)\s+(my\s+|the\s+)?certificate/i,
+     /certificate\s+(received|done|generated|downloaded|completed|worked|working|is ready|ready)/i,
+     /thank(s| you)\s+(for|very much)/i,
+     /(got my|have my|i got|i have)\s+certificate/i
+   ]},
 
   // ─── Login / Access ───────────────────────────────────────────────────────
   {id:'login',name:'Login / Access',badge:'badge-login',ccls:'cc-blue',
@@ -623,6 +693,9 @@ function parseZoomChat(text){
   return rows;
 }
 
+// Shared time utility (used by spam detection + cert time gate)
+function timeToSecs(t){const p=t.split(':').map(Number);return p[0]*3600+p[1]*60+(p[2]||0);}
+
 // Word-boundary keyword match — prevents "mic" matching "academic", "mute" matching "mimutes" etc.
 function kwMatch(chat,kw){
   const esc=kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
@@ -636,6 +709,14 @@ function detectIssues(rows){
 
       // STEP 1 — keyword match (word-boundary)
       if(!cat.keywords.some(k=>kwMatch(row.chat,k))) continue;
+
+      // STEP 1.5 — cert time gate
+      // Only flag cert issues AFTER the handler first sent the certificate link to Everyone.
+      // Everything before that timestamp is attendees requesting/asking about the cert — not an error.
+      if(cat.id==='cert'){
+        if(certLinkSentSecs===null) continue; // handler hasn't sent the cert link → no cert issues possible
+        if(timeToSecs(row.time)<=certLinkSentSecs) continue; // message is before/at cert link send → skip
+      }
 
       // STEP 2 — exclusion check (with optional bypass)
       if(cat.excl&&cat.excl.length){
@@ -684,17 +765,73 @@ function loadFile(e){const f=e.target.files[0];if(!f)return;const r=new FileRead
 function handleDrop(e){e.preventDefault();document.getElementById('dropZone').classList.remove('drag');const f=e.dataTransfer.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>processText(ev.target.result);r.readAsText(f,'UTF-8');}
 function parseFromPaste(){const t=document.getElementById('pasteArea').value;if(!t.trim()){alert('Please paste chat content first.');return;}processText(t);}
 
+// ═══════════════════════════════════════════
+//  SPAM DETECTION
+//  Per-sender: same normalised message sent
+//  more than once within 120s = spam.
+//  Handler messages are never spam-filtered.
+// ═══════════════════════════════════════════
+function detectAndRemoveSpam(rows){
+  const hNameLo=getHandlerName().toLowerCase();
+  // (uses global timeToSecs)
+  const norm=t=>t.toLowerCase().trim().replace(/\s+/g,' ');
+  const WINDOW=120; // seconds
+
+  // Build per-sender message list (skip handler)
+  const senderMsgs={};
+  rows.forEach((r,i)=>{
+    if(r.admin.toLowerCase()===hNameLo) return;
+    const k=r.admin.toLowerCase();
+    (senderMsgs[k]=senderMsgs[k]||[]).push({idx:i,nm:norm(r.chat),secs:timeToSecs(r.time)});
+  });
+
+  // Flag spam indices
+  const spamIdx=new Set();
+  Object.values(senderMsgs).forEach(msgs=>{
+    const lastKept={}; // normMsg → secs of last kept
+    msgs.forEach(({idx,nm,secs})=>{
+      const last=lastKept[nm];
+      if(last!==undefined&&(secs-last)<=WINDOW){
+        spamIdx.add(idx); // duplicate within window → spam
+      } else {
+        lastKept[nm]=secs; // new or outside window → keep
+      }
+    });
+  });
+
+  return{
+    cleanChats:rows.filter((_,i)=>!spamIdx.has(i)),
+    spamChats: rows.filter((_,i)=>spamIdx.has(i))
+  };
+}
+
 function processText(text){
-  allChats=parseZoomChat(text);
-  if(!allChats.length){alert('No valid chat rows found.\n\nExpected format:\n"HH:MM:SS From Name to Destination:"\non line 1, then message on next line.');return;}
-  allIssues=detectIssues(allChats);
+  const parsed=parseZoomChat(text);
+  if(!parsed.length){alert('No valid chat rows found.\n\nExpected format:\n"HH:MM:SS From Name to Destination:"\non line 1, then message on next line.');return;}
+  // Detect spam — allChats keeps ALL messages; cleanChats feeds issue detection only
+  const {cleanChats,spamChats:sp}=detectAndRemoveSpam(parsed);
+  allChats=parsed;        // ← full unfiltered set — Total Chat shows everything
+  spamChats=sp;           // ← spam list for reference / stats
+  chatTabMode='clean';
+
+  // Find when handler first sent the certificate link to Everyone
+  // Only messages AFTER this timestamp will be considered cert issues
+  const hLo=getHandlerName().toLowerCase();
+  const certRow=parsed.find(r=>
+    r.admin.toLowerCase()===hLo &&
+    (r.replyTo.toLowerCase()==='everyone'||r.replyTo.toLowerCase()==='all') &&
+    r.chat.toLowerCase().includes('certx.in/submit')
+  );
+  certLinkSentSecs = certRow ? timeToSecs(certRow.time) : null;
+
+  allIssues=detectIssues(cleanChats); // ← issues only from non-spam messages
   handlerRows=computeHandlerRows();
   updateNavCounts();updateStats();populateIssueFilter();buildCatGrid();
   renderChatTable();renderIssueTable();renderHandlerTable();
   checkMandatory();
   renderMandatoryView();
   document.getElementById('exportBar').style.display='block';
-  document.getElementById('hdrStatus').textContent=allChats.length.toLocaleString()+' messages loaded';
+  document.getElementById('hdrStatus').textContent=parsed.length.toLocaleString()+' messages loaded';
   switchView('chat');
 }
 
@@ -840,14 +977,65 @@ function renderMandatoryView() {
 function avatarColor(n){let h=0;for(let i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%ACOLORS.length;return ACOLORS[h];}
 function initials(n){const p=n.split(' ');return((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase();}
 
+function switchChatTab(mode){
+  chatTabMode=mode;chatPage=1;
+  document.getElementById('tab-clean').classList.toggle('active',mode==='clean');
+  document.getElementById('tab-spam').classList.toggle('active',mode==='spam');
+  const spamCol=document.getElementById('spamColHead');
+  if(spamCol) spamCol.style.display=mode==='spam'?'':'none';
+  renderChatTable();
+}
+
 function renderChatTable(){
   const q=(document.getElementById('chatSearch')?.value||'').toLowerCase();
-  const fil=allChats.filter(r=>!q||r.chat.toLowerCase().includes(q)||r.admin.toLowerCase().includes(q));
-  const tot=fil.length;chatPage=Math.min(chatPage,Math.max(1,Math.ceil(tot/PAGE)));
-  const sl=fil.slice((chatPage-1)*PAGE,chatPage*PAGE);
-  document.getElementById('chatTbody').innerHTML=sl.map(r=>{const c=avatarColor(r.admin);return`<tr><td class="td-time">${esc(r.time)}</td><td class="td-name"><span class="avatar" style="background:${c}22;color:${c}">${initials(r.admin)}</span>${esc(r.admin)}</td><td class="td-to">${esc(r.replyTo)}</td><td class="td-chat">${esc(r.chat)}</td></tr>`;}).join('');
-  document.getElementById('chatPageInfo').textContent=`${Math.min((chatPage-1)*PAGE+1,Math.max(1,tot))}–${Math.min(chatPage*PAGE,tot)} of ${tot.toLocaleString()}`;
-  document.getElementById('tag-chat').textContent=allChats.length.toLocaleString()+' messages';
+  const norm=t=>t.toLowerCase().trim().replace(/\s+/g,' ');
+
+  if(chatTabMode==='spam'){
+    // Spam tab: show only the detected spam messages (for reference)
+    const spamSet=new Set(spamChats.map(r=>r.time+'|'+r.admin+'|'+norm(r.chat)));
+    const fil=spamChats.filter(r=>!q||r.chat.toLowerCase().includes(q)||r.admin.toLowerCase().includes(q));
+    const tot=fil.length;
+    chatPage=Math.min(chatPage,Math.max(1,Math.ceil(tot/PAGE)));
+    const sl=fil.slice((chatPage-1)*PAGE,chatPage*PAGE);
+    document.getElementById('chatTbody').innerHTML=sl.map(r=>{
+      const c=avatarColor(r.admin);
+      // Find first occurrence in allChats (the kept one)
+      const orig=allChats.find(k=>k.admin===r.admin&&norm(k.chat)===norm(r.chat));
+      const origChip=orig?`<span class="mand-time-chip" title="First sent at (kept)">1st @ ${esc(orig.time)}</span>`:'';
+      return`<tr class="spam-row">
+        <td class="td-time">${esc(r.time)}</td>
+        <td class="td-name"><span class="avatar" style="background:${c}22;color:${c}">${initials(r.admin)}</span>${esc(r.admin)}</td>
+        <td class="td-to">${esc(r.replyTo)}</td>
+        <td class="td-chat">${esc(r.chat)}</td>
+        <td style="white-space:nowrap;"><span class="badge-spam">SPAM</span> ${origChip}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('chatPageInfo').textContent=`${Math.min((chatPage-1)*PAGE+1,Math.max(1,tot))}–${Math.min(chatPage*PAGE,tot)} of ${tot.toLocaleString()} spam`;
+  } else {
+    // All Messages tab: show EVERY message (full chat, including spam)
+    const fil=allChats.filter(r=>!q||r.chat.toLowerCase().includes(q)||r.admin.toLowerCase().includes(q));
+    const tot=fil.length;
+    chatPage=Math.min(chatPage,Math.max(1,Math.ceil(tot/PAGE)));
+    const sl=fil.slice((chatPage-1)*PAGE,chatPage*PAGE);
+    // Build a lookup set for quick spam membership check
+    const spamKey=new Set(spamChats.map(r=>r.time+'|'+r.admin.toLowerCase()+'|'+norm(r.chat)));
+    document.getElementById('chatTbody').innerHTML=sl.map(r=>{
+      const c=avatarColor(r.admin);
+      const isSpam=spamKey.has(r.time+'|'+r.admin.toLowerCase()+'|'+norm(r.chat));
+      const spamMark=isSpam?'<span class="badge-spam" style="margin-left:6px;opacity:0.6;">SPAM</span>':'';
+      return`<tr>
+        <td class="td-time">${esc(r.time)}</td>
+        <td class="td-name"><span class="avatar" style="background:${c}22;color:${c}">${initials(r.admin)}</span>${esc(r.admin)}</td>
+        <td class="td-to">${esc(r.replyTo)}</td>
+        <td class="td-chat">${esc(r.chat)}${spamMark}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('chatPageInfo').textContent=`${Math.min((chatPage-1)*PAGE+1,Math.max(1,tot))}–${Math.min(chatPage*PAGE,tot)} of ${tot.toLocaleString()} total`;
+  }
+
+  document.getElementById('tag-chat').textContent=allChats.length.toLocaleString()+' total · '+spamChats.length.toLocaleString()+' spam marked';
+  const tabSpamCount=document.getElementById('tab-spam-count');
+  if(tabSpamCount) tabSpamCount.textContent=spamChats.length?'('+spamChats.length+')':'';
 }
 
 function renderIssueTable(){
@@ -905,11 +1093,25 @@ function updateStats(){
   const cust=allChats.filter(r=>r.admin.toLowerCase()!==hName).length;
   const issCnt=allIssues.filter(r=>r.include).length;
   const hRep=computeHandlerRows().length;
+  const spamSenderSet=new Set(spamChats.map(r=>r.admin));
+
+  // Stats row (5 cards — grid becomes repeat(5,1fr))
+  const sr=document.getElementById('statsRow');
+  if(sr) sr.style.gridTemplateColumns='repeat(5,1fr)';
   document.getElementById('statsRow').innerHTML=`
     <div class="stat-card sc-blue"><div class="stat-ico">💬</div><div class="stat-val">${allChats.length.toLocaleString()}</div><div class="stat-lbl">Total Chats</div><div class="stat-sub2">${uniq.toLocaleString()} unique senders</div></div>
     <div class="stat-card sc-cyan"><div class="stat-ico">👥</div><div class="stat-val">${cust.toLocaleString()}</div><div class="stat-lbl">Customer Chats</div><div class="stat-sub2">Handler excluded</div></div>
     <div class="stat-card sc-red"><div class="stat-ico">⚠️</div><div class="stat-val">${issCnt.toLocaleString()}</div><div class="stat-lbl">Issues Flagged</div><div class="stat-sub2">Across ${CATEGORIES.length} categories</div></div>
-    <div class="stat-card sc-green"><div class="stat-ico">💬</div><div class="stat-val">${hRep.toLocaleString()}</div><div class="stat-lbl">Handler Replies</div><div class="stat-sub2">Personal replies only</div></div>`;
+    <div class="stat-card sc-green"><div class="stat-ico">💬</div><div class="stat-val">${hRep.toLocaleString()}</div><div class="stat-lbl">Handler Replies</div><div class="stat-sub2">Personal replies only</div></div>
+    <div class="stat-card sc-orange"><div class="stat-ico">🧹</div><div class="stat-val">${spamChats.length.toLocaleString()}</div><div class="stat-lbl">Spam Removed</div><div class="stat-sub2">${spamSenderSet.size} senders</div></div>`;
+
+  // Update spam banner
+  const banner=document.getElementById('spamBanner');
+  if(banner){
+    banner.style.display=spamChats.length?'flex':'none';
+    document.getElementById('spamBannerCount').textContent=spamChats.length.toLocaleString();
+    document.getElementById('spamBannerSenders').textContent=spamSenderSet.size.toLocaleString();
+  }
 }
 function updateNavCounts(){document.getElementById('nc-chat').textContent=allChats.length.toLocaleString();document.getElementById('nc-issues').textContent=allIssues.filter(r=>r.include).length;document.getElementById('nc-handler').textContent=computeHandlerRows().length;}
 function changePage(v,d){if(v==='chat'){chatPage=Math.max(1,chatPage+d);renderChatTable();}else if(v==='issue'){issuePage=Math.max(1,issuePage+d);renderIssueTable();}else if(v==='handler'){handlerPage=Math.max(1,handlerPage+d);renderHandlerTable();}}
@@ -918,8 +1120,13 @@ function toggleIssue(idx){allIssues[idx].include=!allIssues[idx].include;updateN
 function exportXLSX(){
   if(!allChats.length){alert('No data to export.');return;}
   const wb=XLSX.utils.book_new();
-  const cd=[['Time','Admin','Replied To','Chat']];allChats.forEach(r=>cd.push([r.time,r.admin,r.replyTo,r.chat]));
-  const wsC=XLSX.utils.aoa_to_sheet(cd);wsC['!cols']=[{wch:10},{wch:24},{wch:24},{wch:58}];XLSX.utils.book_append_sheet(wb,wsC,'Total Chat');
+  // Total Chat = ALL messages exactly as in the savechat
+  const cd=[['Time','Admin','Replied To','Chat']];
+
+  allChats.forEach(r=>cd.push([r.time,r.admin,r.replyTo,r.chat]));
+  const wsC=XLSX.utils.aoa_to_sheet(cd);wsC['!cols']=[{wch:10},{wch:24},{wch:24},{wch:58}];
+  XLSX.utils.book_append_sheet(wb,wsC,'Total Chat');
+  // Spam messages: excluded from Total Issues but NOT exported as a separate sheet
   const hName=getHandlerName().toLowerCase();
   const id2=[['Time','Admin','Replied To','Chat','Issue Category']];allIssues.filter(r=>r.include&&r.admin.toLowerCase()!==hName).forEach(r=>id2.push([r.time,r.admin,r.replyTo,r.chat,r.catName]));
   const wsI=XLSX.utils.aoa_to_sheet(id2);wsI['!cols']=[{wch:10},{wch:24},{wch:24},{wch:58},{wch:20}];XLSX.utils.book_append_sheet(wb,wsI,'Total Issues');
