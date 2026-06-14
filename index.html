@@ -160,6 +160,13 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
 .badge-payment{background:rgba(251,146,60,0.1);color:#fdba74;border:1px solid rgba(251,146,60,0.2);}.badge-payment::before{background:#fb923c;}
 .badge-feedback{background:rgba(148,163,184,0.08);color:var(--text2);border:1px solid var(--border);}.badge-feedback::before{background:var(--text3);}
 /* ── Mandatory checklist ── */
+.mand-snippet-edit{display:flex;align-items:center;gap:5px;margin-top:3px;}
+.mand-snippet-code{font-family:var(--mono);font-size:10px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);padding:1px 7px;border-radius:3px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default;}
+.mand-snippet-code.custom{color:var(--amber);background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.25);}
+.mand-snippet-code.multi{color:var(--cyan);background:rgba(34,211,238,0.07);border-color:rgba(34,211,238,0.2);}
+.mand-edit-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:0 3px;transition:color 0.15s;line-height:1;flex-shrink:0;}
+.mand-edit-btn:hover{color:var(--indigo);}
+.mand-snippet-inp{font-family:var(--mono)!important;font-size:11px!important;padding:2px 8px!important;width:220px;}
 .mand-sent{color:var(--green);font-weight:600;font-size:12px;display:flex;align-items:center;gap:5px;}
 .mand-miss{color:var(--red);font-weight:600;font-size:12px;display:flex;align-items:center;gap:5px;}
 .progress-wrap{background:var(--surface2);border-radius:6px;height:8px;overflow:hidden;margin-top:6px;}
@@ -172,6 +179,24 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
 .mand-stat{display:flex;flex-direction:column;gap:2px;}
 .mand-stat-val{font-size:18px;font-weight:700;font-family:var(--mono);}
 .mand-stat-lbl{font-size:11px;color:var(--text3);}
+/* ── Mandatory CSV upload ── */
+.mand-source-bar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:12px 16px;margin-bottom:14px;flex-wrap:wrap;}
+.mand-source-label{font-size:12px;color:var(--text2);white-space:nowrap;}
+.mand-source-badge{font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:4px;font-weight:500;}
+.mand-source-default{background:rgba(99,102,241,0.1);color:var(--indigo);border:1px solid rgba(99,102,241,0.2);}
+.mand-source-custom{background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);}
+.mand-csv-drop{border:1.5px dashed var(--border2);border-radius:var(--r);padding:8px 16px;cursor:pointer;font-size:12.5px;color:var(--text2);transition:all 0.18s;display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.mand-csv-drop:hover{border-color:rgba(99,102,241,0.5);color:var(--text);background:rgba(99,102,241,0.05);}
+/* ── Host config card ── */
+.host-config-card{max-width:620px;margin:0 auto 18px;background:var(--surface);border:1px solid rgba(99,102,241,0.25);border-radius:var(--r2);padding:16px 18px;position:relative;overflow:hidden;}
+.host-config-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--indigo2),var(--cyan));}
+.hcc-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.hcc-title{font-size:13px;font-weight:700;color:var(--text);}
+.hcc-hint{font-size:11px;color:var(--text3);margin-left:auto;}
+.handler-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:26px;}
+.handler-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:20px;padding:3px 12px;font-size:12px;color:#a5b4fc;font-weight:500;}
+.handler-pill-dot{width:6px;height:6px;border-radius:50%;background:var(--indigo);flex-shrink:0;box-shadow:0 0 4px var(--indigo);}
+.hcc-desc{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6;}
 /* ── Spam ── */
 .spam-banner{background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.2);border-radius:var(--r);padding:10px 16px;display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:13px;color:#fdba74;}
 .spam-banner-ico{font-size:15px;flex-shrink:0;}
@@ -334,6 +359,25 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
     <div class="upload-hero-title">Zoom Chat Intelligence</div>
     <div class="upload-hero-sub">Upload your session savechat and instantly get issue analysis, handler insights, and an export-ready report.</div>
   </div>
+
+  <!-- HOST / HANDLER NAMES CONFIG — set before uploading -->
+  <div class="host-config-card">
+    <div class="hcc-header">
+      <span class="hcc-title">🎙️ Host / Handler Names</span>
+      <span class="hcc-hint">Comma-separated · add all possible name variants</span>
+    </div>
+    <input class="inp inp-sm" id="handlerNamesInput"
+           value="Aditya Be10x"
+           placeholder="Aditya Be10X, Aditya - Be10X, Host Name"
+           oninput="updateHandlerPills()"/>
+    <div id="handlerPills" class="handler-pills"></div>
+    <div class="hcc-desc">
+      These names are used everywhere — Handler Replies sheet, Mandatory message tracking,
+      Spam exclusion, Issue filtering, and Certificate link detection.
+      Change any time; analysis re-runs automatically.
+    </div>
+  </div>
+
   <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
     <div class="upload-icon-wrap">📂</div>
     <div class="upload-zone-title">Drop your Zoom savechat here</div>
@@ -442,8 +486,9 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
     <div class="sec-title">Handler Replies</div>
     <span class="sec-badge" id="tag-handler">0 replies</span>
     <div class="sec-spacer"></div>
-    <span style="font-size:12px;color:var(--text2);margin-right:6px;">Handler:</span>
-    <input class="inp inp-sm" id="handlerName" placeholder="Aditya Be10x" oninput="recomputeHandler()" style="width:170px;"/>
+    <span style="font-size:12px;color:var(--text2);margin-right:8px;">Handlers:</span>
+    <span id="handlerNamesDisplay" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;"></span>
+    <button class="btn btn-secondary btn-xs" style="margin-left:8px;" onclick="switchView('upload')" title="Edit handler names in Session Config">⚙ Edit Names</button>
   </div>
   <div class="alert-note">
     <span class="alert-note-ico">ℹ️</span>
@@ -504,10 +549,22 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
     <span style="font-size:12px;color:var(--text2);">Handler: <strong id="mand-handler-name">Aditya Be10X</strong></span>
   </div>
 
+  <!-- CSV Source Bar -->
+  <div class="mand-source-bar">
+    <span class="mand-source-label">Mandatory messages source:</span>
+    <span class="mand-source-badge mand-source-default" id="mandSourceBadge">Default — 25 messages</span>
+    <div class="sec-spacer"></div>
+    <div class="mand-csv-drop" onclick="document.getElementById('mandCSVInput').click()">
+      📋 Upload CSV to override
+    </div>
+    <input type="file" id="mandCSVInput" accept=".csv,.txt" onchange="loadMandatoryCSV(event)" style="display:none;"/>
+    <button class="btn btn-secondary btn-xs" id="mandResetBtn" onclick="resetToDefaultMandatory()" style="display:none;">↺ Reset to Default</button>
+  </div>
+
   <div class="mand-progress-card" id="mandProgressCard">
     <div class="mand-progress-top">
       <span class="mand-big" id="mandBig" style="color:var(--green)">—</span>
-      <span class="mand-label">/ 25 mandatory messages sent</span>
+      <span class="mand-label">/ <span id="mandTotal">25</span> mandatory messages sent</span>
     </div>
     <div class="progress-wrap"><div class="progress-fill" id="mandProgressBar" style="width:0%"></div></div>
     <div class="mand-stats">
@@ -526,7 +583,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
 
   <div class="alert-note" style="margin-top:16px;">
     <span class="alert-note-ico">ℹ️</span>
-    <span>Matching scans all broadcasts from the handler to <strong>Everyone</strong> and <strong>Hosts &amp; panelists</strong>. Duplicate mandatory messages from the CSV are counted as one. Tool 5 &amp; Tool 11 (both claude.ai) are deduped to a single entry.</span>
+    <span>Matching scans all handler broadcasts to <strong>Everyone</strong> and <strong>Hosts &amp; panelists</strong>. Duplicate messages in uploaded CSV are deduped automatically. Upload a CSV to use session-specific mandatory messages instead of the built-in default list.</span>
   </div>
 </div>
 
@@ -750,11 +807,56 @@ function detectIssues(rows){
   return issues;
 }
 
-function getHandlerName(){return(document.getElementById('handlerName')?.value||'Aditya Be10x').trim();}
+// ── Handler Name Configuration ──────────────────────────────────────────
+// Single source of truth: handlerNamesInput in the upload view
+function getHandlerNamesArray(){
+  const raw=document.getElementById('handlerNamesInput')?.value||'Aditya Be10x';
+  return raw.split(',').map(n=>n.trim()).filter(Boolean);
+}
+
+// true if adminName matches ANY of the configured handler names (case-insensitive)
+function isHandler(adminName){
+  if(!adminName) return false;
+  const lo=adminName.toLowerCase();
+  return getHandlerNamesArray().some(h=>h.toLowerCase()===lo);
+}
+
+// Comma-joined string for display labels and XLSX headers
+function getHandlerName(){return getHandlerNamesArray().join(', ');}
+
+// Called on input change: refresh pills, re-run analysis if data loaded
+function updateHandlerPills(){
+  const names=getHandlerNamesArray();
+  // Pills in upload view
+  const pills=document.getElementById('handlerPills');
+  if(pills) pills.innerHTML=names.map(n=>`<span class="handler-pill"><span class="handler-pill-dot"></span>${esc(n)}</span>`).join('');
+  // Chips in handler view
+  const disp=document.getElementById('handlerNamesDisplay');
+  if(disp) disp.innerHTML=names.map(n=>`<span class="handler-chip"><span class="handler-dot"></span>${esc(n)}</span>`).join('');
+  // Mandatory handler name label
+  const mhn=document.getElementById('mand-handler-name');
+  if(mhn) mhn.textContent=getHandlerName();
+  // Re-run everything if data is loaded
+  if(allChats.length){
+    const {cleanChats,spamChats:sp}=detectAndRemoveSpam(allChats);
+    spamChats=sp;
+    // Re-detect cert link with updated handler names
+    const certRow=allChats.find(r=>
+      isHandler(r.admin)&&
+      (r.replyTo.toLowerCase()==='everyone'||r.replyTo.toLowerCase()==='all')&&
+      r.chat.toLowerCase().includes('certx.in/submit')
+    );
+    certLinkSentSecs=certRow?timeToSecs(certRow.time):null;
+    allIssues=detectIssues(cleanChats);
+    handlerRows=computeHandlerRows();
+    updateNavCounts();updateStats();populateIssueFilter();buildCatGrid();
+    renderChatTable();renderIssueTable();renderHandlerTable();
+    checkMandatory();renderMandatoryView();
+  }
+}
 function computeHandlerRows(){
-  const h=getHandlerName().toLowerCase();
   return allChats.filter(r=>{
-    if(r.admin.toLowerCase()!==h) return false;
+    if(!isHandler(r.admin)) return false;
     const rt=r.replyTo.toLowerCase();
     return rt!=='everyone'&&rt!=='all'&&rt!=='hosts and panelists';
   });
@@ -772,15 +874,14 @@ function parseFromPaste(){const t=document.getElementById('pasteArea').value;if(
 //  Handler messages are never spam-filtered.
 // ═══════════════════════════════════════════
 function detectAndRemoveSpam(rows){
-  const hNameLo=getHandlerName().toLowerCase();
-  // (uses global timeToSecs)
+  // (uses global timeToSecs and isHandler)
   const norm=t=>t.toLowerCase().trim().replace(/\s+/g,' ');
   const WINDOW=120; // seconds
 
-  // Build per-sender message list (skip handler)
+  // Build per-sender message list (skip all configured handlers)
   const senderMsgs={};
   rows.forEach((r,i)=>{
-    if(r.admin.toLowerCase()===hNameLo) return;
+    if(isHandler(r.admin)) return; // handlers never counted as spam
     const k=r.admin.toLowerCase();
     (senderMsgs[k]=senderMsgs[k]||[]).push({idx:i,nm:norm(r.chat),secs:timeToSecs(r.time)});
   });
@@ -816,9 +917,8 @@ function processText(text){
 
   // Find when handler first sent the certificate link to Everyone
   // Only messages AFTER this timestamp will be considered cert issues
-  const hLo=getHandlerName().toLowerCase();
   const certRow=parsed.find(r=>
-    r.admin.toLowerCase()===hLo &&
+    isHandler(r.admin) &&
     (r.replyTo.toLowerCase()==='everyone'||r.replyTo.toLowerCase()==='all') &&
     r.chat.toLowerCase().includes('certx.in/submit')
   );
@@ -843,67 +943,364 @@ function loadDemo(){
 const ACOLORS=['#6366f1','#22d3ee','#10b981','#f59e0b','#ef4444','#ec4899','#a78bfa','#34d399','#fb923c','#38bdf8'];
 
 // ═══════════════════════════════════════════
-//  MANDATORY MESSAGES — sourced from CSV
-//  Duplicates in CSV are deduped (one entry).
-//  "DON'T SEND" rows excluded.
+//  MANDATORY MESSAGES
+//  customMandatoryMsgs = null → use DEFAULT_MANDATORY_MSGS
+//  Upload a CSV → parses into customMandatoryMsgs
+//  getActiveMandatoryMsgs() always returns the live list
 // ═══════════════════════════════════════════
-const MANDATORY_MSGS = [
+let customMandatoryMsgs = null; // set when user uploads a CSV
+
+function getActiveMandatoryMsgs(){
+  return customMandatoryMsgs || DEFAULT_MANDATORY_MSGS;
+}
+
+// ── CSV parsing utilities ─────────────────────────────────────────────
+
+// Full CSV parser — handles multi-line quoted fields correctly.
+// Does NOT pre-split on newlines (that breaks multi-line cells).
+function parseFullCSV(text){
+  const rows=[];
+  let curRow=[],curField='',inQuote=false;
+  const t=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  for(let i=0;i<=t.length;i++){
+    const c=i<t.length?t[i]:'\n'; // sentinel end
+    const nx=t[i+1];
+    if(c==='"'){
+      if(inQuote&&nx==='"'){curField+='"';i++;}  // escaped ""
+      else inQuote=!inQuote;
+    } else if(c===','&&!inQuote){
+      curRow.push(curField.trim());curField='';
+    } else if(c==='\n'&&!inQuote){
+      curRow.push(curField.trim());
+      if(curRow.some(f=>f.length>0)) rows.push(curRow);
+      curRow=[];curField='';
+    } else {
+      curField+=c;
+    }
+  }
+  return rows;
+}
+
+function generateMandatorySnippet(msg){
+  const m=msg.trim();
+  // Pure URL lines → use domain+path (very unique match key)
+  if(/^https?:\/\/[^\s]+\s*$/.test(m)){
+    return m.replace(/^https?:\/\//,'').trim();
+  }
+  // Message that STARTS with a URL (no leading text)
+  const urlStart=m.match(/^https?:\/\/[^\s]+/);
+  if(urlStart) return urlStart[0].replace(/^https?:\/\//,'');
+  // Text message (may have embedded URLs — use text opening, not embedded URL)
+  const clean=m.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu,'')
+               .replace(/^[^a-zA-Z0-9']+/,'')
+               .replace(/\s+/g,' ')
+               .trim();
+  return clean.substring(0,60).trim();
+}
+
+function autoCategorizeMandatory(msg){
+  const lo=msg.toLowerCase();
+  if(/certx|certificate/.test(lo)) return 'Closing';
+  if(/workshop-review|feedback|review/.test(lo)) return 'Closing';
+  if(/whatsapp/.test(lo)) return 'Closing';
+  if(/linkedin|tag @be10x/.test(lo)) return 'Closing';
+  if(/bonus|be10xbonus/.test(lo)) return 'Closing';
+  if(/career accelerator|inner circle|aica/.test(lo)) return 'Sales / AICA';
+  if(/payment issue|alternate.*pay|still facing payment/.test(lo)) return 'Sales / AICA';
+  if(/notebooklm|wisprflow|stitch\.with|aistudio|gemini\.google|claude\.ai|julius\.ai|chatgpt|perplexity|n8n\.io|samantha/.test(lo)) return 'Tool Link';
+  if(/important information|stay until the end|ai-tools-workshop-ref|referral/.test(lo)) return 'Engagement';
+  if(/kicking off|welcome.*workshop|workshop everyone/.test(lo)) return 'Warmup / Start';
+  if(/audio|blur|video quality|rejoin/.test(lo)) return 'Tech Support';
+  return 'General';
+}
+
+function parseMandatoryCSV(csvText){
+  // Use full multi-line CSV parser (handles quoted fields with internal newlines)
+  const rows=parseFullCSV(csvText);
+  if(rows.length<2) return null;
+
+  const header=rows[0].map(h=>h.toLowerCase().replace(/['"]/g,'').trim());
+
+  // Message column: explicit header OR longest-content column
+  let msgIdx=header.findIndex(h=>/^(message|msg|chat|text|content)$/.test(h));
+  if(msgIdx===-1){
+    const sums=new Array(header.length).fill(0);
+    rows.slice(1,20).forEach(r=>r.forEach((v,i)=>sums[i]+=v.length));
+    msgIdx=sums.indexOf(Math.max(...sums));
+  }
+  // Mode column
+  const modeIdx=header.findIndex(h=>/^mode$/.test(h));
+  // Column 0 — often unlabeled but has role labels (Tool 1, Tool 2, Important, etc.)
+  const col0IsLabelCol=header[0]===''||/^(role|type|label|category|item)$/.test(header[0]);
+  // Named "name" column
+  const nameIdx=header.findIndex((h,i)=>i>0&&/^name$/.test(h));
+
+  const genericNames=['admin','administrator','host','handler','panelist','moderator',...getHandlerNamesArray().map(n=>n.toLowerCase())];
+  const seenNorm=new Set();
+  const result=[];
+  let idCounter=1;
+
+  for(let i=1;i<rows.length;i++){
+    const row=rows[i];
+    if(!row[msgIdx]) continue;
+    const msgText=row[msgIdx].trim();
+    if(!msgText||msgText.length<3) continue;
+
+    // Skip DON'T SEND rows
+    const mode=(modeIdx!==-1?(row[modeIdx]||''):'').replace(/['"]/g,'').trim();
+    if(/don.?t\s*send|do not send/i.test(mode)) continue;
+
+    // Skip draft/conditional rows (col 0 hint)
+    // Normalize col0 (may contain internal newlines from multi-line cells)
+    const col0Val=(row[0]||'').replace(/\s+/g,' ').trim();
+    // Skip refund draft rows (indicated in col0 OR name col)
+    const nameColVal=(nameIdx!==-1?(row[nameIdx]||''):'').replace(/['"]/g,'').trim();
+    if(/refund\s+draft/i.test(col0Val)||/refund\s+draft/i.test(nameColVal)) continue;
+
+    // Deduplicate by normalised content
+    const norm=msgText.toLowerCase().replace(/\s+/g,' ').trim();
+    if(seenNorm.has(norm)) continue;
+    seenNorm.add(norm);
+
+    // Snippet
+    const snippet=generateMandatorySnippet(msgText);
+    if(!snippet||snippet.length<5) continue;
+
+    // Label (priority: col0 → name col → message content)
+    let label='';
+    // col0: use as label unless it's a long "Send this when..." instruction
+    if(col0IsLabelCol&&col0Val&&col0Val.length>1&&col0Val.length<=50){
+      if(!/^send\s+this\s+when/i.test(col0Val)) label=col0Val;
+    }
+    if(!label&&nameIdx!==-1&&row[nameIdx]){
+      const nv=row[nameIdx].replace(/['"]/g,'').trim();
+      // Skip: generic names, comma-separated people lists (like "PRANAV, AYAN"), handler name
+      const isGeneric=genericNames.some(g=>nv.toLowerCase().includes(g));
+      const isPeopleList=nv.includes(',')&&nv===nv.toUpperCase(); // "PRANAV, AYAN" style
+      if(nv.length>2&&!isGeneric&&!isPeopleList) label=nv;
+    }
+    if(!label||label.length<2){
+      const urlDom=msgText.match(/^https?:\/\/([^/\s]+)/);
+      if(urlDom) label=urlDom[1];
+      else{
+        const stripped=msgText
+          .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu,'')
+          .replace(/^[^a-zA-Z0-9']+/,'').replace(/\s+/g,' ').trim();
+        label=stripped.substring(0,45)+(stripped.length>45?'\u2026':'');
+      }
+    }
+
+    // Timing: prefer mode col time, else col0 time
+    let timing='During session';
+    const timeFromMode=mode.match(/\d{1,2}[:.]\d{2}\s*(AM|PM)?/i);
+    if(timeFromMode) timing=timeFromMode[0];
+    else{
+      const t2=col0Val.match(/\d{1,2}[:.]\d{2}\s*(AM|PM)?/i);
+      if(t2) timing=t2[0];
+    }
+
+    result.push({id:idCounter++,cat:autoCategorizeMandatory(msgText),label:label||snippet.substring(0,30),snippet,timing});
+  }
+  return result.length>0?result:null;
+}
+
+function loadMandatoryCSV(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const parsed=parseMandatoryCSV(ev.target.result);
+    if(!parsed||!parsed.length){
+      alert('Could not parse mandatory messages CSV.\n\nMake sure the file has a column containing the message text, and rows for each mandatory message.');
+      return;
+    }
+    customMandatoryMsgs=parsed;
+    updateMandatorySourceUI();
+    // Re-run check if savechat is already loaded
+    if(allChats.length){checkMandatory();renderMandatoryView();}
+    else{renderMandatoryView();}
+  };
+  reader.readAsText(file,'UTF-8');
+  // Reset input so same file can be re-uploaded
+  e.target.value='';
+}
+
+function resetToDefaultMandatory(){
+  customMandatoryMsgs=null;
+  updateMandatorySourceUI();
+  if(allChats.length){checkMandatory();renderMandatoryView();}
+  else{renderMandatoryView();}
+}
+
+function updateMandatorySourceUI(){
+  const badge=document.getElementById('mandSourceBadge');
+  const resetBtn=document.getElementById('mandResetBtn');
+  const total=document.getElementById('mandTotal');
+  const active=getActiveMandatoryMsgs();
+  if(customMandatoryMsgs){
+    badge.className='mand-source-badge mand-source-custom';
+    badge.textContent='Custom CSV — '+active.length+' messages';
+    if(resetBtn)resetBtn.style.display='';
+  } else {
+    badge.className='mand-source-badge mand-source-default';
+    badge.textContent='Default — '+active.length+' messages (auto-updated from CSV)';
+    if(resetBtn)resetBtn.style.display='none';
+  }
+  if(total)total.textContent=active.length;
+}
+
+// ── Default mandatory messages (built-in, 26 entries) ────────────────
+// Updated from 11th June CSV — tool order revised, Kimi added.
+//
+// KEYWORD MATCHING PHILOSOPHY:
+//  • For stable tool URLs  → match the domain/path (won't change session-to-session)
+//  • For dynamic URLs      → match stable text keywords, not the variable part
+//    e.g. AICA pitch URL changes every session → match "Join the Certified Al Career Accelerator"
+//         Payment URL changes → match "Still facing Payment issues"
+//         Certificate UUID changes → match "certx.in/submit" (path prefix is stable)
+//         Referral link has two variants → multi-snippet array covers both
+//  • `excl` blocks a sub-string that distinguishes the wrong message type
+//    e.g. ChatGPT plain URL vs Custom GPT paths → excl:'chatgpt.com/g/'
+const DEFAULT_MANDATORY_MSGS = [
   // ── Warmup / Session Start ──────────────────────────────────────────
-  {id:1,  cat:'Warmup / Start',    label:'Warmup Message',           snippet:'kicking off the session right at',               timing:'10:50 AM & 10:55 AM'},
-  {id:2,  cat:'Warmup / Start',    label:'Welcome Message',           snippet:'Welcome to Be10X AI Tools Workshop Everyone',    timing:'Exact 11:00 AM'},
+  {id:1,  cat:'Warmup / Start',    label:'Warmup Message',
+   snippet:'kicking off the session right at',
+   timing:'10:50 AM & 10:55 AM'},
+  {id:2,  cat:'Warmup / Start',    label:'Welcome Message',
+   snippet:'Welcome to Be10X AI Tools Workshop Everyone',
+   timing:'Exact 11:00 AM'},
   // ── Tech Support ────────────────────────────────────────────────────
-  {id:3,  cat:'Tech Support',      label:'Blur Video Fix',            snippet:'experiencing blur video',                       timing:'11:10 AM & 11:35 AM'},
-  {id:4,  cat:'Tech Support',      label:'Audio Fix',                 snippet:'facing audio issues, please rejoin',             timing:'11:30 AM & 11:45 AM'},
-  // ── Tool Links ──────────────────────────────────────────────────────
-  {id:5,  cat:'Tool Link',         label:'Tool 1 – NotebookLM',       snippet:'notebooklm.google.com',                         timing:'Tool 1'},
-  {id:6,  cat:'Tool Link',         label:'Tool 2 – WisprFlow',        snippet:'wisprflow.ai',                                  timing:'Tool 2'},
-  {id:7,  cat:'Tool Link',         label:'Tool 3 – Stitch',           snippet:'stitch.withgoogle.com',                         timing:'Tool 3'},
-  {id:8,  cat:'Tool Link',         label:'Tool 4 – AI Studio',        snippet:'aistudio.google.com',                           timing:'Tool 4'},
-  {id:9,  cat:'Tool Link',         label:'Gemini',                    snippet:'gemini.google.com',                             timing:'During session'},
-  {id:10, cat:'Tool Link',         label:'Tool 5/11 – Claude AI',     snippet:'claude.ai',                                     timing:'Tool 5 & 11 (deduped)'},
-  {id:11, cat:'Tool Link',         label:'Tool 6 – Julius AI',        snippet:'julius.ai',                                     timing:'Tool 6'},
-  {id:12, cat:'Tool Link',         label:'Tool 7 – ATS Resume GPT',   snippet:'be10x-ats-resume-generator',                    timing:'Tool 7'},
-  {id:13, cat:'Tool Link',         label:'Tool 8 – ChatGPT',          snippet:'chatgpt.com',                                   excl:'g-67b866a648a88191b29e8274026994fd', timing:'Tool 8'},
-  {id:14, cat:'Tool Link',         label:'Tool 9 – Perplexity Comet', snippet:'perplexity.ai/comet',                           timing:'Tool 9'},
-  {id:15, cat:'Tool Link',         label:'Tool 10 – n8n',             snippet:'n8n.io',                                        timing:'Tool 10'},
-  {id:16, cat:'Tool Link',         label:'Samantha Chatbot',          snippet:'g-68b2bfda04c481919dfb43b5f0796648-samantha',   timing:'Samantha session'},
+  {id:3,  cat:'Tech Support',      label:'Blur Video Fix',
+   snippet:'experiencing blur video',
+   timing:'11:10 AM & 11:35 AM'},
+  {id:4,  cat:'Tech Support',      label:'Audio Fix',
+   snippet:'facing audio issues, please rejoin',
+   timing:'11:30 AM & 11:45 AM'},
+  // ── Tool Links (order per June CSV) ─────────────────────────────────
+  {id:5,  cat:'Tool Link',         label:'Tool 1 – NotebookLM',
+   snippet:'notebooklm.google.com',
+   timing:'Tool 1'},
+  {id:6,  cat:'Tool Link',         label:'Tool 2 – WisprFlow',
+   snippet:'wisprflow.ai',
+   timing:'Tool 2'},
+  {id:7,  cat:'Tool Link',         label:'Tool 3 – Stitch',
+   snippet:'stitch.withgoogle.com',
+   timing:'Tool 3'},
+  {id:8,  cat:'Tool Link',         label:'Tool 4 – AI Studio',
+   snippet:'aistudio.google.com',
+   timing:'Tool 4'},
+  // Tool 5: plain ChatGPT URL — excl blocks custom-GPT /g/ paths (ATS, Samantha etc.)
+  {id:9,  cat:'Tool Link',         label:'Tool 5 – ChatGPT',
+   snippet:'chatgpt.com',
+   excl:'chatgpt.com/g/',
+   timing:'Tool 5'},
+  {id:10, cat:'Tool Link',         label:'Tool 6 – Gemini',
+   snippet:'gemini.google.com',
+   timing:'Tool 6'},
+  // Tool 7 & Tool 12 are both claude.ai — deduplicated to one entry
+  {id:11, cat:'Tool Link',         label:'Tool 7/12 – Claude AI',
+   snippet:'claude.ai',
+   timing:'Tool 7 & 12 (deduped)'},
+  // Bonus Tool: Kimi (new in June CSV)
+  {id:12, cat:'Tool Link',         label:'Bonus – Kimi AI',
+   snippet:'kimi.com',
+   timing:'Bonus Tool'},
+  {id:13, cat:'Tool Link',         label:'Tool 8 – Julius AI',
+   snippet:'julius.ai',
+   timing:'Tool 8'},
   // ── Engagement ──────────────────────────────────────────────────────
-  {id:17, cat:'Engagement',        label:'Stay Till End Alert',       snippet:'Important Information. Please ensure you stay until the end', timing:'After Gemini & after n8n'},
-  {id:18, cat:'Engagement',        label:'Referral Program Tracker',  snippet:'ai-tools-workshop-ref',                         timing:'~2:25 PM'},
+  {id:14, cat:'Engagement',        label:'Stay Till End Alert',
+   // Stable text — URL / phrasing doesn't change
+   snippet:'Important Information. Please ensure you stay until the end',
+   timing:'After Gemini & after n8n'},
+  // ── Tool Links continued ─────────────────────────────────────────────
+  {id:15, cat:'Tool Link',         label:'Tool 9 – ATS Resume GPT',
+   snippet:'be10x-ats-resume-generator',
+   timing:'Tool 9'},
+  {id:16, cat:'Tool Link',         label:'Tool 10 – Perplexity Comet',
+   snippet:'perplexity.ai/comet',
+   timing:'Tool 10'},
+  {id:17, cat:'Tool Link',         label:'Tool 11 – n8n',
+   snippet:'n8n.io',
+   timing:'Tool 11'},
+  {id:18, cat:'Tool Link',         label:'Samantha Chatbot',
+   snippet:'g-68b2bfda04c481919dfb43b5f0796648-samantha',
+   timing:'Samantha session'},
+  // ── Engagement ──────────────────────────────────────────────────────
+  // Referral Tracker: URL alternates between two formats across sessions
+  {id:19, cat:'Engagement',        label:'Referral Program Tracker',
+   snippet:'ai-tools-workshop-ref',
+   // Multi-snippet: any of these patterns matches the referral link
+   snippets:['ai-tools-workshop-ref','ai-share','be10x.com/ai-share','be10x.in/ai-tools-workshop-ref'],
+   timing:'~2:25 PM'},
   // ── Sales / AICA ────────────────────────────────────────────────────
-  {id:19, cat:'Sales / AICA',      label:'AICA Pitch + Payment Link', snippet:'Join the Certified Al Career Accelerator',      timing:'~1:37 PM'},
-  {id:20, cat:'Sales / AICA',      label:'Alternative Payment Link',  snippet:'Still facing Payment issues',                   timing:'After AICA pitch'},
+  // AICA Pitch: payment URL changes every session (dsc65, dsc85, etc.)
+  // → match the stable headline text, not the variable URL
+  {id:20, cat:'Sales / AICA',      label:'AICA Pitch + Payment Link',
+   snippet:'Join the Certified Al Career Accelerator',
+   timing:'~1:37 PM'},
+  // Alt Payment Link: text stays constant, URL changes → match text keyword
+  {id:21, cat:'Sales / AICA',      label:'Alternative Payment Link',
+   snippet:'Still facing Payment issues',
+   timing:'After AICA pitch'},
   // ── Closing ─────────────────────────────────────────────────────────
-  {id:21, cat:'Closing',           label:'Free Bonuses Link',         snippet:'be10xbonuses',                                  timing:'After bonuses reveal'},
-  {id:22, cat:'Closing',           label:'Certificate Link',          snippet:'certx.in/submit',                               timing:'End of session'},
-  {id:23, cat:'Closing',           label:'Feedback / Review Link',    snippet:'workshop-review',                               timing:'2:25 PM'},
-  {id:24, cat:'Closing',           label:'WhatsApp AI Channel',       snippet:'whatsapp.com/channel',                         timing:'After review link'},
-  {id:25, cat:'Closing',           label:'LinkedIn Certificate Post', snippet:'Tag @be10x',                                    timing:'End of session'},
+  {id:22, cat:'Closing',           label:'Free Bonuses Link',
+   snippet:'be10xbonuses',
+   timing:'After bonuses reveal'},
+  // Certificate Link: UUID changes per session → match stable path prefix
+  {id:23, cat:'Closing',           label:'Certificate Link',
+   snippet:'certx.in/submit',
+   timing:'End of session'},
+  // Feedback: short link path is stable
+  {id:24, cat:'Closing',           label:'Feedback / Review Link',
+   snippet:'workshop-review',
+   timing:'2:25 PM'},
+  {id:25, cat:'Closing',           label:'WhatsApp AI Channel',
+   snippet:'whatsapp.com/channel',
+   timing:'After review link'},
+  // LinkedIn post: "Tag @be10x" is always in the message body
+  {id:26, cat:'Closing',           label:'LinkedIn Certificate Post',
+   snippet:'Tag @be10x',
+   timing:'End of session'},
 ];
 
-let mandatoryResults = [];  // populated by checkMandatory()
+let mandatoryResults = [];       // populated by checkMandatory()
+let mandatorySnippetOverrides={};// id → custom snippet (user-edited)
 
 // ═══════════════════════════════════════════
 //  MANDATORY MESSAGE CHECK
 // ═══════════════════════════════════════════
+// Returns the effective snippet(s) for a mandatory message
+// Priority: user override > multi-snippet array > single snippet
+function getEffectiveSnippets(m){
+  if(mandatorySnippetOverrides[m.id]) return [mandatorySnippetOverrides[m.id]];
+  if(m.snippets&&m.snippets.length) return m.snippets;
+  return [m.snippet];
+}
+
+function getEffectiveSnippetDisplay(m){
+  if(mandatorySnippetOverrides[m.id]) return mandatorySnippetOverrides[m.id];
+  if(m.snippets&&m.snippets.length) return m.snippets[0]+' (+'+( m.snippets.length-1)+' more)';
+  return m.snippet;
+}
+
 function msgMatchesMandatory(chatText, m) {
   const lo = chatText.toLowerCase();
-  const snipLo = m.snippet.toLowerCase();
-  if (!lo.includes(snipLo)) return false;
+  // Match if ANY of the effective snippets is found in the chat
+  if (!getEffectiveSnippets(m).some(s => lo.includes(s.toLowerCase()))) return false;
   if (m.excl && lo.includes(m.excl.toLowerCase())) return false;
   return true;
 }
 
 function checkMandatory() {
-  const hName = getHandlerName().toLowerCase();
   // Broadcast messages = handler → Everyone OR Hosts and panelists
   const broadcasts = allChats.filter(r => {
-    if (r.admin.toLowerCase() !== hName) return false;
+    if (!isHandler(r.admin)) return false;
     const rt = r.replyTo.toLowerCase();
     return rt === 'everyone' || rt === 'hosts and panelists' || rt === 'all';
   });
 
-  mandatoryResults = MANDATORY_MSGS.map(m => {
+  mandatoryResults = getActiveMandatoryMsgs().map(m => {
     const matches = broadcasts.filter(r => msgMatchesMandatory(r.chat, m));
     return {
       ...m,
@@ -915,8 +1312,8 @@ function checkMandatory() {
 
   // update nav count
   const sentCount = mandatoryResults.filter(r => r.sent).length;
-  document.getElementById('nc-mandatory').textContent = sentCount + '/' + MANDATORY_MSGS.length;
-  document.getElementById('tag-mandatory').textContent = sentCount + ' of ' + MANDATORY_MSGS.length + ' sent';
+  document.getElementById('nc-mandatory').textContent = sentCount + '/' + getActiveMandatoryMsgs().length;
+  document.getElementById('tag-mandatory').textContent = sentCount + ' of ' + getActiveMandatoryMsgs().length + ' sent';
 }
 
 // ═══════════════════════════════════════════
@@ -938,18 +1335,21 @@ function renderMandatoryView() {
     return;
   }
 
-  const total = MANDATORY_MSGS.length;
+  const total = getActiveMandatoryMsgs().length;
   const sentCount = mandatoryResults.filter(r => r.sent).length;
   const pct = Math.round((sentCount / total) * 100);
 
   // Update progress card
   document.getElementById('mandBig').textContent = sentCount;
+  const mtEl=document.getElementById('mandTotal');
+  if(mtEl) mtEl.textContent=total;
   document.getElementById('mandProgressBar').style.width = pct + '%';
   document.getElementById('mand-sent-cnt').textContent = sentCount;
   document.getElementById('mand-miss-cnt').textContent = total - sentCount;
   document.getElementById('mand-pct').textContent = pct + '%';
   document.getElementById('tag-mandatory').textContent = sentCount + ' of ' + total + ' sent';
   document.getElementById('mand-handler-name').textContent = getHandlerName();
+  updateMandatorySourceUI();
 
   document.getElementById('mandatoryTbody').innerHTML = mandatoryResults.map(r => {
     const c = CAT_COLORS[r.cat] || '#6366f1';
@@ -963,10 +1363,23 @@ function renderMandatoryView() {
       ? `<span style="font-family:var(--mono);font-size:13px;color:${r.timesSent >= 2 ? 'var(--green)' : 'var(--text2)'};font-weight:600;">${r.timesSent}×</span>`
       : `<span style="color:var(--text3);">0</span>`;
     const rowBg = r.sent ? '' : 'background:rgba(239,68,68,0.04);';
+    // Snippet display — shows custom override (amber) or multi-snippet (cyan) or default
+    const hasOverride = !!mandatorySnippetOverrides[r.id];
+    const isMulti = !hasOverride && r.snippets && r.snippets.length > 1;
+    const snipClass = hasOverride ? 'mand-snippet-code custom' : isMulti ? 'mand-snippet-code multi' : 'mand-snippet-code';
+    const snipDisplay = esc(getEffectiveSnippetDisplay({...r}));
+    const snippetHtml = `<div class="mand-snippet-edit">
+      <span class="${snipClass}" id="snip-display-${r.id}" title="${hasOverride?'Custom (edited)':isMulti?'Multiple patterns':'Default'}: ${snipDisplay}">${snipDisplay}</span>
+      <button class="mand-edit-btn" onclick="editSnippet(${r.id})" title="Edit match keyword for this session">✎</button>
+      ${hasOverride?`<button class="mand-edit-btn" onclick="resetSnippet(${r.id})" title="Reset to default" style="color:var(--amber);font-size:11px;">↺</button>`:''}
+    </div>`;
     return `<tr style="${rowBg}">
       <td class="td-time">${r.id}</td>
       <td><span class="cat-tag" style="background:${c}18;color:${c};border:1px solid ${c}30;">${esc(r.cat)}</span></td>
-      <td style="font-weight:600;font-size:13px;">${esc(r.label)}</td>
+      <td>
+        <div style="font-weight:600;font-size:13px;">${esc(r.label)}</div>
+        ${snippetHtml}
+      </td>
       <td><span class="mand-time-chip">${esc(r.timing)}</span></td>
       <td>${statusHtml}</td>
       <td>${sentAtHtml}</td>
@@ -974,6 +1387,47 @@ function renderMandatoryView() {
     </tr>`;
   }).join('');
 }
+// ── Mandatory message snippet editing ────────────────────────────────────
+function editSnippet(id){
+  const m=MANDATORY_MSGS.find(x=>x.id===id);
+  if(!m) return;
+  const curVal=mandatorySnippetOverrides[id]||(m.snippets?m.snippets[0]:m.snippet);
+  const dispEl=document.getElementById('snip-display-'+id);
+  if(!dispEl) return;
+  // Replace the span with an inline input
+  const parent=dispEl.parentElement;
+  parent.innerHTML=`<input class="inp mand-snippet-inp" id="snip-inp-${id}"
+    value="${esc(curVal)}"
+    placeholder="Enter keyword or URL fragment…"
+    onblur="saveSnippet(${id},this.value)"
+    onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){resetSnippetEdit(${id})}"
+    onclick="event.stopPropagation()"/>`;
+  setTimeout(()=>{const inp=document.getElementById('snip-inp-'+id);if(inp)inp.focus();},50);
+}
+
+function saveSnippet(id,newVal){
+  const trimmed=newVal.trim();
+  if(trimmed){
+    mandatorySnippetOverrides[id]=trimmed;
+  } else {
+    delete mandatorySnippetOverrides[id];
+  }
+  if(allChats.length){checkMandatory();renderMandatoryView();}
+  else renderMandatoryView(); // just re-render to show updated snippet display
+}
+
+function resetSnippet(id){
+  delete mandatorySnippetOverrides[id];
+  if(allChats.length){checkMandatory();renderMandatoryView();}
+  else renderMandatoryView();
+}
+
+function resetSnippetEdit(id){
+  // Cancel edit without saving
+  if(allChats.length){checkMandatory();renderMandatoryView();}
+  else renderMandatoryView();
+}
+
 function avatarColor(n){let h=0;for(let i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%ACOLORS.length;return ACOLORS[h];}
 function initials(n){const p=n.split(' ');return((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase();}
 
@@ -1089,8 +1543,7 @@ function reanalyze(){allIssues=detectIssues(allChats);updateNavCounts();buildCat
 
 function updateStats(){
   const uniq=new Set(allChats.map(r=>r.admin)).size;
-  const hName=getHandlerName().toLowerCase();
-  const cust=allChats.filter(r=>r.admin.toLowerCase()!==hName).length;
+  const cust=allChats.filter(r=>!isHandler(r.admin)).length;
   const issCnt=allIssues.filter(r=>r.include).length;
   const hRep=computeHandlerRows().length;
   const spamSenderSet=new Set(spamChats.map(r=>r.admin));
@@ -1127,19 +1580,18 @@ function exportXLSX(){
   const wsC=XLSX.utils.aoa_to_sheet(cd);wsC['!cols']=[{wch:10},{wch:24},{wch:24},{wch:58}];
   XLSX.utils.book_append_sheet(wb,wsC,'Total Chat');
   // Spam messages: excluded from Total Issues but NOT exported as a separate sheet
-  const hName=getHandlerName().toLowerCase();
-  const id2=[['Time','Admin','Replied To','Chat','Issue Category']];allIssues.filter(r=>r.include&&r.admin.toLowerCase()!==hName).forEach(r=>id2.push([r.time,r.admin,r.replyTo,r.chat,r.catName]));
+  const id2=[['Time','Admin','Replied To','Chat','Issue Category']];allIssues.filter(r=>r.include&&!isHandler(r.admin)).forEach(r=>id2.push([r.time,r.admin,r.replyTo,r.chat,r.catName]));
   const wsI=XLSX.utils.aoa_to_sheet(id2);wsI['!cols']=[{wch:10},{wch:24},{wch:24},{wch:58},{wch:20}];XLSX.utils.book_append_sheet(wb,wsI,'Total Issues');
   const hd=[['Time','Handler','Replied To','Message']];computeHandlerRows().forEach(r=>hd.push([r.time,r.admin,r.replyTo,r.chat]));
   const wsH=XLSX.utils.aoa_to_sheet(hd);wsH['!cols']=[{wch:10},{wch:20},{wch:30},{wch:60}];XLSX.utils.book_append_sheet(wb,wsH,'Handler Replies');
   // Sheet 4: Mandatory Messages
   if(mandatoryResults.length){
     const sentCnt=mandatoryResults.filter(r=>r.sent).length;
-    const pct=Math.round((sentCnt/MANDATORY_MSGS.length)*100);
+    const pct=Math.round((sentCnt/getActiveMandatoryMsgs().length)*100);
     const mData=[
       ['Mandatory Messages Tracker — '+getHandlerName(),'','','','','',''],
       ['Total','Sent','Missing','Completion %','','',''],
-      [MANDATORY_MSGS.length, sentCnt, MANDATORY_MSGS.length-sentCnt, pct+'%','','',''],
+      [getActiveMandatoryMsgs().length, sentCnt, getActiveMandatoryMsgs().length-sentCnt, pct+'%','','',''],
       ['','','','','','',''],
       ['#','Category','Message / Label','Required Timing','Status','Sent At','Times Sent'],
     ];
@@ -1166,6 +1618,9 @@ function switchView(v){
 }
 
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// Initialise on load
+window.addEventListener('DOMContentLoaded',()=>updateHandlerPills());
 </script>
 </body>
 </html>
