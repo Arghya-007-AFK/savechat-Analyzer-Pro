@@ -1149,8 +1149,8 @@ function updateMandatorySourceUI(){
   if(total)total.textContent=active.length;
 }
 
-// ── Default mandatory messages (built-in, 26 entries) ────────────────
-// Updated from 11th June CSV — tool order revised, Kimi added.
+// ── Default mandatory messages (built-in, 25 entries) ────────────────
+// Kimi and n8n removed — not included in current sessions.
 //
 // KEYWORD MATCHING PHILOSOPHY:
 //  • For stable tool URLs  → match the domain/path (won't change session-to-session)
@@ -1176,7 +1176,7 @@ const DEFAULT_MANDATORY_MSGS = [
   {id:4,  cat:'Tech Support',      label:'Audio Fix',
    snippet:'facing audio issues, please rejoin',
    timing:'11:30 AM & 11:45 AM'},
-  // ── Tool Links (order per June CSV) ─────────────────────────────────
+  // ── Tool Links ──────────────────────────────────────────────────────
   {id:5,  cat:'Tool Link',         label:'Tool 1 – NotebookLM',
    snippet:'notebooklm.google.com',
    timing:'Tool 1'},
@@ -1201,66 +1201,60 @@ const DEFAULT_MANDATORY_MSGS = [
   {id:11, cat:'Tool Link',         label:'Tool 7/12 – Claude AI',
    snippet:'claude.ai',
    timing:'Tool 7 & 12 (deduped)'},
-  // Bonus Tool: Kimi (new in June CSV)
-  {id:12, cat:'Tool Link',         label:'Bonus – Kimi AI',
-   snippet:'kimi.com',
-   timing:'Bonus Tool'},
-  {id:13, cat:'Tool Link',         label:'Tool 8 – Julius AI',
+  {id:12, cat:'Tool Link',         label:'Tool 8 – Julius AI',
    snippet:'julius.ai',
    timing:'Tool 8'},
   // ── Engagement ──────────────────────────────────────────────────────
-  {id:14, cat:'Engagement',        label:'Stay Till End Alert',
-   // Stable text — URL / phrasing doesn't change
+  {id:13, cat:'Engagement',        label:'Stay Till End Alert',
    snippet:'Important Information. Please ensure you stay until the end',
-   timing:'After Gemini & after n8n'},
+   timing:'After Gemini'},
   // ── Tool Links continued ─────────────────────────────────────────────
-  {id:15, cat:'Tool Link',         label:'Tool 9 – ATS Resume GPT',
+  {id:14, cat:'Tool Link',         label:'Tool 9 – ATS Resume GPT',
    snippet:'be10x-ats-resume-generator',
    timing:'Tool 9'},
-  {id:16, cat:'Tool Link',         label:'Tool 10 – Perplexity Comet',
+  {id:15, cat:'Tool Link',         label:'Tool 10 – Perplexity Comet',
    snippet:'perplexity.ai/comet',
    timing:'Tool 10'},
-  {id:17, cat:'Tool Link',         label:'Tool 11 – n8n',
-   snippet:'n8n.io',
-   timing:'Tool 11'},
-  {id:18, cat:'Tool Link',         label:'Samantha Chatbot',
+  {id:16, cat:'Tool Link',         label:'Samantha Chatbot',
    snippet:'g-68b2bfda04c481919dfb43b5f0796648-samantha',
    timing:'Samantha session'},
   // ── Engagement ──────────────────────────────────────────────────────
   // Referral Tracker: URL alternates between two formats across sessions
-  {id:19, cat:'Engagement',        label:'Referral Program Tracker',
+  {id:17, cat:'Engagement',        label:'Referral Program Tracker',
    snippet:'ai-tools-workshop-ref',
-   // Multi-snippet: any of these patterns matches the referral link
    snippets:['ai-tools-workshop-ref','ai-share','be10x.com/ai-share','be10x.in/ai-tools-workshop-ref'],
    timing:'~2:25 PM'},
   // ── Sales / AICA ────────────────────────────────────────────────────
-  // AICA Pitch: payment URL changes every session (dsc65, dsc85, etc.)
-  // → match the stable headline text, not the variable URL
-  {id:20, cat:'Sales / AICA',      label:'AICA Pitch + Payment Link',
+  // AICA Pitch: payment URL changes every session → match stable headline text
+  {id:18, cat:'Sales / AICA',      label:'AICA Pitch + Payment Link',
    snippet:'Join the Certified Al Career Accelerator',
    timing:'~1:37 PM'},
-  // Alt Payment Link: text stays constant, URL changes → match text keyword
-  {id:21, cat:'Sales / AICA',      label:'Alternative Payment Link',
+  // Alt Payment Link: text constant, URL changes → match text keyword
+  {id:19, cat:'Sales / AICA',      label:'Alternative Payment Link',
    snippet:'Still facing Payment issues',
    timing:'After AICA pitch'},
   // ── Closing ─────────────────────────────────────────────────────────
-  {id:22, cat:'Closing',           label:'Free Bonuses Link',
+  {id:20, cat:'Closing',           label:'Free Bonuses Link',
    snippet:'be10xbonuses',
    timing:'After bonuses reveal'},
   // Certificate Link: UUID changes per session → match stable path prefix
-  {id:23, cat:'Closing',           label:'Certificate Link',
+  {id:21, cat:'Closing',           label:'Certificate Link',
    snippet:'certx.in/submit',
    timing:'End of session'},
-  // Feedback: short link path is stable
-  {id:24, cat:'Closing',           label:'Feedback / Review Link',
+  {id:22, cat:'Closing',           label:'Feedback / Review Link',
    snippet:'workshop-review',
    timing:'2:25 PM'},
-  {id:25, cat:'Closing',           label:'WhatsApp AI Channel',
+  {id:23, cat:'Closing',           label:'WhatsApp AI Channel',
    snippet:'whatsapp.com/channel',
    timing:'After review link'},
   // LinkedIn post: "Tag @be10x" is always in the message body
-  {id:26, cat:'Closing',           label:'LinkedIn Certificate Post',
+  {id:24, cat:'Closing',           label:'LinkedIn Certificate Post',
    snippet:'Tag @be10x',
+   timing:'End of session'},
+  // LMS App Download Link: two URL variants (FOR EM vs FOR PAID) — either one counts
+  {id:25, cat:'Closing',           label:'LMS App Download Link',
+   snippet:'Be10X-App-Download',
+   snippets:['Be10X-App-Download','download-Be10X-App'],
    timing:'End of session'},
 ];
 
