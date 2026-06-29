@@ -599,10 +599,23 @@ let chatTabMode='clean'; // 'clean' | 'spam'
 let certLinkSentSecs=null; // timestamp (seconds) when handler first sent cert link to Everyone
 let CATEGORIES=[
   // ─── Blurry / Video ───────────────────────────────────────────────────────
+  // Video-specific keywords only. Ambiguous phrases like "not clear" / "not visible"
+  // are scoped to video/screen so they can't steal audio complaints like
+  // "voice is not clear". An audio-context exclusion is the final safety net.
   {id:'blur',name:'Blurry / Video',badge:'badge-blur',ccls:'cc-purple',
-   keywords:['blur','blurry','video quality','screen quality','not clear','not visible',
-             'cant see','cannot see','picture quality','poor quality','fuzzy','pixelated',
-             'screen issue','screen problem']},
+   keywords:[
+     'blur','blurry','fuzzy','pixelated','hazy','grainy',
+     'video quality','screen quality','picture quality','display quality',
+     'video not clear','video is not clear','screen not clear','screen is not clear',
+     'video not visible','screen not visible','slides not visible','slide not visible',
+     'video not coming','video not showing','screen not showing','cant see the screen',
+     'cant see the slide','cannot see the slide','cant see slides','cannot see slides','cant see the slides','cannot see the slides',
+     'cant see the video','cannot see the video','poor video','poor quality video',
+     'screen issue','screen problem','video issue','video problem',
+     'not visible properly','low quality video','bad video'
+   ],
+   // Safety net: if the message is about audio/voice/sound, it is NOT a video issue
+   excl:[/\b(voice|audio|sound|hear|hearing|audible|speaker|mic|volume|echo)\b/i]},
 
   // ─── Audio Issues ─────────────────────────────────────────────────────────
   // Removed generic standalone keywords (voice, sound, audio, hear) that caused
@@ -620,6 +633,9 @@ let CATEGORIES=[
      'no sound','sound not','sound issue','sound problem','sound not coming',
      // voice complaint phrases
      'voice not','voice issue','voice problem','voice breaking','voice not coming',
+     'voice not clear','voice is not clear','voice unclear',
+     'audio not clear','audio is not clear','audio unclear',
+     'sound not clear','sound is not clear','sound unclear',
      // mic complaint phrases
      'mic not','mic issue','mic problem','mic not working',
      // speaker complaint
