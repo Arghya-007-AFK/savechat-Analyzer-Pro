@@ -188,6 +188,14 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
 .mand-source-custom{background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);}
 .mand-csv-drop{border:1.5px dashed var(--border2);border-radius:var(--r);padding:8px 16px;cursor:pointer;font-size:12.5px;color:var(--text2);transition:all 0.18s;display:flex;align-items:center;gap:8px;white-space:nowrap;}
 .mand-csv-drop:hover{border-color:rgba(99,102,241,0.5);color:var(--text);background:rgba(99,102,241,0.05);}
+/* ── Video preset dropdown ── */
+.preset-label{font-size:11.5px;font-weight:600;color:var(--text2);margin-top:14px;margin-bottom:6px;letter-spacing:0.3px;}
+.preset-select{background:var(--surface2);border:1px solid rgba(99,102,241,0.4);border-radius:var(--r);padding:9px 13px;color:#c7d2fe;font-size:13px;font-weight:600;font-family:var(--font);outline:none;cursor:pointer;width:100%;transition:border-color 0.18s;}
+.preset-select:hover,.preset-select:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,0.1);}
+.preset-select option{background:var(--surface);color:var(--text);}
+.preset-inline{display:flex;align-items:center;gap:10px;margin-bottom:14px;background:var(--surface);border:1px solid rgba(99,102,241,0.25);border-radius:var(--r2);padding:12px 16px;}
+.preset-inline .preset-select{width:auto;min-width:240px;}
+.preset-inline-label{font-size:12.5px;font-weight:600;color:var(--text2);white-space:nowrap;}
 /* ── Host config card ── */
 .host-config-card{max-width:620px;margin:0 auto 18px;background:var(--surface);border:1px solid rgba(99,102,241,0.25);border-radius:var(--r2);padding:16px 18px;position:relative;overflow:hidden;}
 .host-config-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--indigo2),var(--cyan));}
@@ -340,12 +348,12 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
   <div class="export-bar">
     <div class="export-info">
       <div class="export-title">Export Final Report</div>
-      <div class="export-sub">3-sheet XLSX · Be10x SOP format · ready to share</div>
+      <div class="export-sub">XLSX · Issues inline in Total Chat (filter by "Is Issue?" = 1)</div>
     </div>
     <div class="export-sheets">
-      <span class="sheet-pill">Total Chat</span>
-      <span class="sheet-pill">Total Issues</span>
+      <span class="sheet-pill">Total Chat + Issues</span>
       <span class="sheet-pill">Handler Replies</span>
+      <span class="sheet-pill">Mandatory Messages</span>
     </div>
     <button class="btn btn-success" onclick="exportXLSX()">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 1v8M4 6l3 3 3-3M1 10v2a1 1 0 001 1h10a1 1 0 001-1v-2"/></svg>
@@ -377,6 +385,12 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       Spam exclusion, Issue filtering, and Certificate link detection.
       Change any time; analysis re-runs automatically.
     </div>
+    <div class="preset-label">📼 Which recorded video is this savechat from? Mandatory messages are checked against its script.</div>
+    <select class="preset-select" id="presetSelectUpload" onchange="setSessionPreset(this.value)">
+      <option value="march31" selected>31st March Video</option>
+      <option value="aug11">11th August Video</option>
+      <option value="aug9">9th August Student Video</option>
+    </select>
   </div>
 
   <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
@@ -403,7 +417,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
   </div>
   <div class="info-box">
     <span class="info-icon">💡</span>
-    <div class="info-text"><strong>Expected format:</strong> <code>HH:MM:SS From [Name] to [Destination]:</code> on one line, message on the next (tab-indented). Matches standard Zoom Save Chat export.</div>
+    <div class="info-text"><strong>Supported formats:</strong> <code>HH:MM:SS From [Name] to [Destination]:</code> or <code>YYYY-MM-DD HH:MM:SS From [Name] to [Destination]:</code> on one line, message on the next (tab-indented). Both classic and new Zoom Save Chat exports work.</div>
   </div>
 </div>
 
@@ -562,6 +576,15 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
     <button class="btn btn-secondary btn-xs" id="mandResetBtn" onclick="resetToDefaultMandatory()" style="display:none;">↺ Reset to Default</button>
   </div>
 
+  <div class="preset-inline">
+    <span class="preset-inline-label">📼 Checking against:</span>
+    <select class="preset-select" id="presetSelectMand" onchange="setSessionPreset(this.value)">
+      <option value="march31" selected>31st March Video</option>
+      <option value="aug11">11th August Video</option>
+      <option value="aug9">9th August Student Video</option>
+    </select>
+  </div>
+
   <div class="mand-progress-card" id="mandProgressCard">
     <div class="mand-progress-top">
       <span class="mand-big" id="mandBig" style="color:var(--green)">—</span>
@@ -623,29 +646,34 @@ let CATEGORIES=[
   // false positives on AI feature mentions ("voice commands", "audio message" etc.)
   // Now only problem-specific compound phrases + inherently-negative words.
   {id:'audio',name:'Audio Issues',badge:'badge-audio',ccls:'cc-amber',
+   // Every keyword is audio-scoped. NO bare 'not working' / 'not coming' /
+   // 'feedback' — those caught "link is not working", "QR code not working",
+   // and "honest feedback for you" as false Audio Issues.
    keywords:[
-     // inherently negative — no extra context needed
-     'mute','muted','echo','distort','feedback',
+     // inherently negative audio words
+     'mute','muted','echo','distort','audio feedback','mic feedback','sound feedback',
      // cant-hear variants (Indian typing style = no apostrophe)
      'cant hear','cannot hear','not audible','not hearing','hear nothing',
-     // audio-specific complaint phrases
-     'audio not','no audio','audio issue','audio problem','audio not coming','audio not working',
+     'not able to hear','unable to hear',
+     // audio complaint phrases (with and without "is")
+     'audio not','audio is not','no audio','audio issue','audio problem',
+     'audio not clear','audio is not clear','audio unclear','audio breaking',
+     'audio is muted','audio cutting','audio cut',
      // sound complaint phrases
-     'no sound','sound not','sound issue','sound problem','sound not coming',
+     'no sound','sound not','sound is not','sound issue','sound problem',
+     'sound not clear','sound is not clear','sound unclear','sound breaking',
      // voice complaint phrases
-     'voice not','voice issue','voice problem','voice breaking','voice not coming',
+     'voice not','voice is not','voice issue','voice problem',
+     'voice breaking','voice is breaking','voice cracking',
      'voice not clear','voice is not clear','voice unclear',
-     'audio not clear','audio is not clear','audio unclear',
-     'sound not clear','sound is not clear','sound unclear',
-     // mic complaint phrases
-     'mic not','mic issue','mic problem','mic not working',
-     // speaker complaint
-     'speaker not','speaker issue',
-     // volume issue
-     'volume issue','volume not',
-     // background noise as problem
+     // mic / speaker
+     'mic not','mic is not','mic issue','mic problem','mic muted',
+     'speaker not','speaker is not','speaker issue',
+     // volume
+     'volume issue','volume not','volume is not','volume low','low volume',
+     // noise
      'background noise','noise issue','hearing problem',
-     'not coming','not working'
+     'you are muted','u r muted','sir muted','host muted','you are on mute'
    ]},
 
   // ─── Recorded Session ─────────────────────────────────────────────────────
@@ -664,8 +692,34 @@ let CATEGORIES=[
 
   // ─── Network / Lag ────────────────────────────────────────────────────────
   {id:'network',name:'Network / Lag',badge:'badge-network',ccls:'cc-cyan',
-   keywords:['lag','buffering','buffer','internet','network','connection','disconnect',
-             'reconnect','dropping','freeze','frozen','loading','slow','stuck','bandwidth']},
+   // Bare 'network' / 'internet' / 'connection' / 'slow' removed — they caught
+   // profession intros like "36, network Automation Engineer" and teaching-pace
+   // feedback like "pace slow karo". All keywords are now problem-scoped.
+   keywords:[
+     // inherently problem words
+     'lag','lagging','laggy','buffering','buffer','glitching','glitch',
+     'frozen','freezing','keeps freezing','screen freeze','video freeze',
+     'disconnect','disconnected','reconnect','reconnecting',
+     // internet problem compounds
+     'internet slow','slow internet','internet is slow','internet issue',
+     'internet problem','internet not','no internet','poor internet','weak internet',
+     'my internet','internet down','net slow','net is slow','net issue',
+     // network problem compounds
+     'network issue','network problem','network slow','network is slow',
+     'network too slow','network is too slow','poor network','weak network',
+     'no network','network not','network down','network error','network unstable',
+     // connection problem compounds
+     'connection issue','connection problem','connection lost','connection drop',
+     'connection dropping','connection dropped','poor connection','weak connection',
+     'connection slow','connection is slow','unstable connection','keeps dropping',
+     // streaming / loading problems
+     'keeps buffering','not loading','video stuck','screen stuck','stream stuck',
+     'video hanging','video lag','stream lag','low bandwidth','bandwidth issue'
+   ],
+   // Safety net: profession/intro context (host asks age + profession) is never
+   // a network issue — unless a genuine complaint word is also present
+   excl:[/\b(engineer|engineering|developer|analyst|architect|administrator|admin|consultant|specialist|technician|professional|profession|designation|automation|implementation|years? of (exp|experience)|working (in|as|at))\b/i],
+   exclBypass:[/\b(lag|lagging|laggy|buffering|slow|not working|issue|problem|disconnect|poor|weak|unstable|frozen|freezing|stuck|dropped|dropping|down)\b/i]},
 
   // ─── Certificate / Link Issues ───────────────────────────────────────────
   // Attendees reporting errors after the certificate link is sent.
@@ -708,7 +762,8 @@ let CATEGORIES=[
   {id:'login',name:'Login / Access',badge:'badge-login',ccls:'cc-blue',
    keywords:['login','log in','link','cant join','unable to join','not able to join',
              'not able to login','password','otp','register','enrollment','access denied',
-             'no access'],
+             'no access','app not working','app is not working','app store version',
+             'app not opening','app crash','cant install','unable to install','app issue'],
    excl:[/\b(want|wan|wanna|would like|wish|like)\s+to\s+(join|register|enroll)/i,
          /\bwhen\s+(can|do|will)\s+(i|we)\s+(join|register)/i,
          /\bhow\s+(can|do|to)\s+(i|we|one)\s+(join|register)/i,
@@ -722,7 +777,8 @@ let CATEGORIES=[
   // signal and will NOT be flagged. Only actual problems get through.
   {id:'payment',name:'Payment Issues',badge:'badge-payment',ccls:'cc-orange',
    keywords:['payment','pay','paid','refund','charge','debit','credit','money',
-             'amount','receipt','invoice','transaction','not received','didnt get'],
+             'amount','receipt','invoice','transaction','not received','didnt get',
+             'qr code','qr not','scanner','upi'],
    // Must contain at least one of these problem indicators to be flagged:
    req:[/\b(not|no|failed|fail|failure|error|issue|problem|pending|refund|wrong|double|twice|deducted|missing|overcharged|incorrect|declined|rejected|bounced|dispute|chargeback|unsuccessful|didn.?t|didnt|did not|cant|cannot|unable|not\s+done|not\s+processed|not\s+successful|not\s+received|not\s+getting|not\s+reflecting|not\s+credited|not\s+working)\b/i]},
 
@@ -753,7 +809,11 @@ let CATEGORIES=[
 function parseZoomChat(text){
   const rows=[];
   const lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
-  const hr=/^(\d{1,2}:\d{2}:\d{2})\s+[Ff]rom\s+(.+?)\s+[Tt]o\s+(.+?):\s*$/;
+  // Header formats supported:
+  //   "HH:MM:SS From Name to Destination:"              (classic)
+  //   "YYYY-MM-DD HH:MM:SS From Name to Destination:"   (new export format)
+  //   "DD/MM/YYYY HH:MM:SS From ..." / "DD-MM-YYYY ..." (defensive)
+  const hr=/^(?:\d{4}-\d{2}-\d{2}\s+|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\s+)?(\d{1,2}:\d{2}:\d{2})\s+[Ff]rom\s+(.+?)\s+[Tt]o\s+(.+?):\s*$/;
   let cur=null;
   for(let i=0;i<lines.length;i++){
     const t=lines[i].trim();
@@ -927,7 +987,7 @@ function detectAndRemoveSpam(rows){
 
 function processText(text){
   const parsed=parseZoomChat(text);
-  if(!parsed.length){alert('No valid chat rows found.\n\nExpected format:\n"HH:MM:SS From Name to Destination:"\non line 1, then message on next line.');return;}
+  if(!parsed.length){alert('No valid chat rows found.\n\nSupported header formats:\n"HH:MM:SS From Name to Destination:"\n"YYYY-MM-DD HH:MM:SS From Name to Destination:"\nwith the message on the next line.');return;}
   // Detect spam — allChats keeps ALL messages; cleanChats feeds issue detection only
   const {cleanChats,spamChats:sp}=detectAndRemoveSpam(parsed);
   allChats=parsed;        // ← full unfiltered set — Total Chat shows everything
@@ -970,7 +1030,27 @@ const ACOLORS=['#6366f1','#22d3ee','#10b981','#f59e0b','#ef4444','#ec4899','#a78
 let customMandatoryMsgs = null; // set when user uploads a CSV
 
 function getActiveMandatoryMsgs(){
-  return customMandatoryMsgs || DEFAULT_MANDATORY_MSGS;
+  return customMandatoryMsgs || MANDATORY_PRESETS[sessionPreset];
+}
+
+// Switch video preset: clears custom CSV + per-id snippet edits, re-runs analysis
+function setSessionPreset(p){
+  if(!MANDATORY_PRESETS[p]) return;
+  sessionPreset=p;
+  customMandatoryMsgs=null;
+  mandatorySnippetOverrides={};
+  renderPresetButtons();
+  updateMandatorySourceUI();
+  if(allChats.length){checkMandatory();}
+  renderMandatoryView();
+}
+
+function renderPresetButtons(){
+  // Sync both static dropdowns to the active preset
+  ['presetSelectUpload','presetSelectMand'].forEach(cid=>{
+    const el=document.getElementById(cid);
+    if(el) el.value=sessionPreset;
+  });
 }
 
 // ── CSV parsing utilities ─────────────────────────────────────────────
@@ -1162,7 +1242,7 @@ function updateMandatorySourceUI(){
     if(resetBtn)resetBtn.style.display='';
   } else {
     badge.className='mand-source-badge mand-source-default';
-    badge.textContent='Default — '+active.length+' messages (auto-updated from CSV)';
+    badge.textContent=PRESET_LABELS[sessionPreset]+' — '+active.length+' messages';
     if(resetBtn)resetBtn.style.display='none';
   }
   if(total)total.textContent=active.length;
@@ -1180,113 +1260,90 @@ function updateMandatorySourceUI(){
 //         Referral link has two variants → multi-snippet array covers both
 //  • `excl` blocks a sub-string that distinguishes the wrong message type
 //    e.g. ChatGPT plain URL vs Custom GPT paths → excl:'chatgpt.com/g/'
-const DEFAULT_MANDATORY_MSGS = [
-  // ── Warmup / Session Start ──────────────────────────────────────────
-  {id:1,  cat:'Warmup / Start',    label:'Warmup Message',
-   snippet:'kicking off the session right at',
-   timing:'10:50 AM & 10:55 AM'},
-  {id:2,  cat:'Warmup / Start',    label:'Welcome Message',
-   snippet:'Welcome to Be10X AI Tools Workshop Everyone',
-   timing:'Exact 11:00 AM'},
-  // ── Tech Support ────────────────────────────────────────────────────
-  {id:3,  cat:'Tech Support',      label:'Blur Video Fix',
-   snippet:'experiencing blur video',
-   timing:'11:10 AM & 11:35 AM'},
-  {id:4,  cat:'Tech Support',      label:'Audio Fix',
-   snippet:'facing audio issues, please rejoin',
-   timing:'11:30 AM & 11:45 AM'},
-  // ── Tool Links ──────────────────────────────────────────────────────
-  {id:5,  cat:'Tool Link',         label:'Tool 1 – NotebookLM',
-   snippet:'notebooklm.google.com',
-   timing:'Tool 1'},
-  {id:6,  cat:'Tool Link',         label:'Tool 2 – WisprFlow',
-   snippet:'wisprflow.ai',
-   timing:'Tool 2'},
-  {id:7,  cat:'Tool Link',         label:'Tool 3 – Stitch',
-   snippet:'stitch.withgoogle.com',
-   timing:'Tool 3'},
-  {id:8,  cat:'Tool Link',         label:'Tool 4 – AI Studio',
-   snippet:'aistudio.google.com',
-   timing:'Tool 4'},
-  // Tool 5: plain ChatGPT URL — excl blocks custom-GPT /g/ paths (ATS, Samantha etc.)
-  {id:9,  cat:'Tool Link',         label:'Tool 5 – ChatGPT',
-   snippet:'chatgpt.com',
-   excl:'chatgpt.com/g/',
-   timing:'Tool 5'},
-  {id:10, cat:'Tool Link',         label:'Tool 6 – Gemini',
-   snippet:'gemini.google.com',
-   timing:'Tool 6'},
-  // Tool 7 & Tool 12 are both claude.ai — deduplicated to one entry
-  {id:11, cat:'Tool Link',         label:'Tool 7/12 – Claude AI',
-   snippet:'claude.ai',
-   timing:'Tool 7 & 12 (deduped)'},
-  {id:12, cat:'Tool Link',         label:'Tool 8 – Julius AI',
-   snippet:'julius.ai',
-   timing:'Tool 8'},
-  // ── Engagement ──────────────────────────────────────────────────────
-  {id:13, cat:'Engagement',        label:'Stay Till End Alert',
-   snippet:'Important Information. Please ensure you stay until the end',
-   timing:'After Gemini'},
-  // ── Tool Links continued ─────────────────────────────────────────────
-  {id:14, cat:'Tool Link',         label:'Tool 9 – ATS Resume GPT',
-   snippet:'be10x-ats-resume-generator',
-   timing:'Tool 9'},
-  {id:15, cat:'Tool Link',         label:'Tool 10 – Perplexity Comet',
-   snippet:'perplexity.ai/comet',
-   timing:'Tool 10'},
-  // n8n returned to the lineup as Tool 11
-  {id:16, cat:'Tool Link',         label:'Tool 11 – n8n',
-   snippet:'n8n.io',
-   timing:'Tool 11'},
-  {id:17, cat:'Tool Link',         label:'Samantha Chatbot',
-   snippet:'g-68b2bfda04c481919dfb43b5f0796648-samantha',
-   timing:'Samantha session'},
-  // ── Engagement ──────────────────────────────────────────────────────
-  // Success Stories Playlist — new addition. Multi-snippet covers common
-  // link formats (YouTube playlist / be10x short links). Edit inline (✎)
-  // if the session uses a different URL.
-  {id:18, cat:'Engagement',        label:'Success Stories Playlist',
-   snippet:'success-stories',
-   snippets:['success-stories','success-story','successstories','youtube.com/playlist','youtu.be','be10x.in/success','link.be10x.in/success'],
-   timing:'During session'},
-  // Referral Tracker: URL alternates between two formats across sessions
-  {id:19, cat:'Engagement',        label:'Referral Program Tracker',
-   snippet:'ai-tools-workshop-ref',
-   snippets:['ai-tools-workshop-ref','ai-share','be10x.com/ai-share','be10x.in/ai-tools-workshop-ref'],
-   timing:'~2:25 PM'},
-  // ── Sales / AICA ────────────────────────────────────────────────────
-  // AICA Pitch: payment URL changes every session → match stable headline text
-  {id:20, cat:'Sales / AICA',      label:'AICA Pitch + Payment Link',
-   snippet:'Join the Certified Al Career Accelerator',
-   timing:'~1:37 PM'},
-  // Alt Payment Link: text constant, URL changes → match text keyword
-  {id:21, cat:'Sales / AICA',      label:'Alternative Payment Link',
-   snippet:'Still facing Payment issues',
-   timing:'After AICA pitch'},
-  // ── Closing ─────────────────────────────────────────────────────────
-  {id:22, cat:'Closing',           label:'Free Bonuses Link',
-   snippet:'be10xbonuses',
-   timing:'After bonuses reveal'},
-  // Certificate Link: UUID changes per session → match stable path prefix
-  {id:23, cat:'Closing',           label:'Certificate Link',
-   snippet:'certx.in/submit',
-   timing:'End of session'},
-  {id:24, cat:'Closing',           label:'Feedback / Review Link',
-   snippet:'workshop-review',
-   timing:'2:25 PM'},
-  {id:25, cat:'Closing',           label:'WhatsApp AI Channel',
-   snippet:'whatsapp.com/channel',
-   timing:'After review link'},
-  // LinkedIn post: "Tag @be10x" is always in the message body
-  {id:26, cat:'Closing',           label:'LinkedIn Certificate Post',
-   snippet:'Tag @be10x',
-   timing:'End of session'},
-  // LMS App Download Link: two URL variants (FOR EXOTIC vs FOR MAIN) — either one counts
-  {id:27, cat:'Closing',           label:'LMS App Download Link',
-   snippet:'Be10X-App-Download',
-   snippets:['Be10X-App-Download','download-Be10X-App'],
-   timing:'End of session'},
+// ── Session presets — mandatory messages per recorded video ──────────
+// Common messages (openers, engagement, sales, closers) are shared;
+// only the numbered tool lineup differs per video.
+function _mm(cat,label,snippet,timing,extra){
+  return Object.assign({cat:cat,label:label,snippet:snippet,timing:timing},extra||{});
+}
+const _OPENERS=[
+  _mm('Warmup / Start','Warmup Message','kicking off the session right at','10:50 AM & 10:55 AM'),
+  _mm('Warmup / Start','Welcome Message','Welcome to Be10X AI Tools Workshop Everyone','Exact 11:00 AM'),
+  _mm('Tech Support','Blur Video Fix','experiencing blur video','11:10 AM & 11:35 AM'),
+  _mm('Tech Support','Audio Fix','facing audio issues, please rejoin','11:30 AM & 11:45 AM'),
 ];
+const _CLOSERS=[
+  _mm('Engagement','Stay Till End Alert','Important Information. Please ensure you stay until the end','Mid-session'),
+  _mm('Tool Link','Samantha Chatbot','g-68b2bfda04c481919dfb43b5f0796648-samantha','Samantha session'),
+  _mm('Engagement','Success Stories Playlist','youtube.com/playlist','During session',
+      {snippets:['youtube.com/playlist','success stories playlist','success-stories','be10x.in/success']}),
+  _mm('Engagement','Referral Program Tracker','ai-share','~2:25 PM',
+      {snippets:['ai-share','be10x.com/ai-share','ai-tools-workshop-ref','be10x.in/ai-tools-workshop-ref']}),
+  _mm('Sales / AICA','AICA Pitch + Payment Link','Join the Certified Al Career Accelerator','~1:37 PM'),
+  _mm('Sales / AICA','Alternative Payment Link','Still facing Payment issues','After AICA pitch'),
+  _mm('Closing','LMS App Download Link','Be10X-App-Download','End of session',
+      {snippets:['Be10X-App-Download','download-Be10X-App']}),
+  _mm('Closing','Free Bonuses Link','be10xbonuses','After bonuses reveal'),
+  _mm('Closing','Certificate Link','certx.in/submit','End of session'),
+  _mm('Closing','Feedback / Review Link','workshop-review','2:25 PM'),
+  _mm('Closing','WhatsApp AI Channel','whatsapp.com/channel','After review link'),
+  _mm('Closing','LinkedIn Certificate Post','Tag @be10x','End of session'),
+];
+function buildPreset(tools){
+  const list=[..._OPENERS,...tools,..._CLOSERS];
+  return list.map((m,i)=>Object.assign({id:i+1},m));
+}
+
+// 31st March Video — Stitch, Gemini, ChatGPT, n8n lineup
+const PRESET_MARCH31=buildPreset([
+  _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google.com','Tool 1'),
+  _mm('Tool Link','Tool 2 – WisprFlow','wisprflow.ai','Tool 2'),
+  _mm('Tool Link','Tool 3 – Stitch','stitch.withgoogle.com','Tool 3'),
+  _mm('Tool Link','Tool 4 – AI Studio','aistudio.google.com','Tool 4'),
+  _mm('Tool Link','Gemini','gemini.google.com','During session'),
+  _mm('Tool Link','Tool 5/11 – Claude AI','claude.ai','Tool 5 & 11 (deduped)',
+      {excl:['claude.ai/code','claude.ai/cowork']}),
+  _mm('Tool Link','Tool 6 – Julius AI','julius.ai','Tool 6'),
+  _mm('Tool Link','Tool 7 – ATS Resume GPT','be10x-ats-resume-generator','Tool 7'),
+  _mm('Tool Link','Tool 8 – ChatGPT','chatgpt.com','Tool 8',{excl:'chatgpt.com/g/'}),
+  _mm('Tool Link','Tool 9 – Perplexity Comet','perplexity.ai/comet','Tool 9'),
+  _mm('Tool Link','Tool 10 – n8n','n8n.io','Tool 10'),
+]);
+
+// 11th August Video — Claude Code/Cowork, Higgsfield, Yoodli lineup
+const PRESET_AUG11=buildPreset([
+  _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google.com','Tool 1'),
+  _mm('Tool Link','Tool 2 – WisprFlow','wisprflow.ai','Tool 2'),
+  _mm('Tool Link','Tool 3 – AI Studio','aistudio.google.com','Tool 3'),
+  _mm('Tool Link','Tool 4 – Julius AI','julius.ai','Tool 4'),
+  _mm('Tool Link','Tool 5 – Claude AI','claude.ai','Tool 5',
+      {excl:['claude.ai/code','claude.ai/cowork']}),
+  _mm('Tool Link','Tool 6 – Claude Code','claude.ai/code','Tool 6'),
+  _mm('Tool Link','Tool 7 – Claude Cowork','claude.ai/cowork','Tool 7'),
+  _mm('Tool Link','Tool 8 – Higgsfield','higgsfield.ai','Tool 8'),
+  _mm('Tool Link','Tool 9 – ATS Resume GPT','be10x-ats-resume-generator','Tool 9'),
+  _mm('Tool Link','Tool 10 – Yoodli','yoodli.ai','Tool 10'),
+  _mm('Tool Link','Tool 11 – Perplexity Comet','perplexity.ai/comet','Tool 11'),
+]);
+
+// 9th August Student Video — Stitch + Higgsfield, no Gemini/n8n
+const PRESET_AUG9=buildPreset([
+  _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google.com','Tool 1'),
+  _mm('Tool Link','Tool 2 – WisprFlow','wisprflow.ai','Tool 2'),
+  _mm('Tool Link','Tool 3 – Stitch','stitch.withgoogle.com','Tool 3'),
+  _mm('Tool Link','Tool 4 – AI Studio','aistudio.google.com','Tool 4'),
+  _mm('Tool Link','Tool 5 – Claude AI','claude.ai','Tool 5',
+      {excl:['claude.ai/code','claude.ai/cowork']}),
+  _mm('Tool Link','Tool 6 – Julius AI','julius.ai','Tool 6'),
+  _mm('Tool Link','Tool 7 – ATS Resume GPT','be10x-ats-resume-generator','Tool 7'),
+  _mm('Tool Link','Tool 8 – ChatGPT','chatgpt.com','Tool 8',{excl:'chatgpt.com/g/'}),
+  _mm('Tool Link','Tool 9 – Higgsfield','higgsfield.ai','Tool 9'),
+  _mm('Tool Link','Tool 10 – Perplexity Comet','perplexity.ai/comet','Tool 10'),
+]);
+
+const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9};
+const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video'};
+let sessionPreset='march31';
 
 let mandatoryResults = [];       // populated by checkMandatory()
 let mandatorySnippetOverrides={};// id → custom snippet (user-edited)
@@ -1312,7 +1369,10 @@ function msgMatchesMandatory(chatText, m) {
   const lo = chatText.toLowerCase();
   // Match if ANY of the effective snippets is found in the chat
   if (!getEffectiveSnippets(m).some(s => lo.includes(s.toLowerCase()))) return false;
-  if (m.excl && lo.includes(m.excl.toLowerCase())) return false;
+  if (m.excl){
+    const exArr=Array.isArray(m.excl)?m.excl:[m.excl];
+    if (exArr.some(e=>lo.includes(e.toLowerCase()))) return false;
+  }
   return true;
 }
 
@@ -1413,7 +1473,7 @@ function renderMandatoryView() {
 }
 // ── Mandatory message snippet editing ────────────────────────────────────
 function editSnippet(id){
-  const m=MANDATORY_MSGS.find(x=>x.id===id);
+  const m=getActiveMandatoryMsgs().find(x=>x.id===id);
   if(!m) return;
   const curVal=mandatorySnippetOverrides[id]||(m.snippets?m.snippets[0]:m.snippet);
   const dispEl=document.getElementById('snip-display-'+id);
@@ -1597,15 +1657,23 @@ function toggleIssue(idx){allIssues[idx].include=!allIssues[idx].include;updateN
 function exportXLSX(){
   if(!allChats.length){alert('No data to export.');return;}
   const wb=XLSX.utils.book_new();
-  // Total Chat = ALL messages exactly as in the savechat
-  const cd=[['Time','Admin','Replied To','Chat']];
-
-  allChats.forEach(r=>cd.push([r.time,r.admin,r.replyTo,r.chat]));
-  const wsC=XLSX.utils.aoa_to_sheet(cd);wsC['!cols']=[{wch:10},{wch:24},{wch:24},{wch:58}];
+  // Total Chat = ALL messages, with Issue Category + Is Issue? columns inline.
+  // No separate Total Issues sheet — filter by 'Is Issue?' = 1 in Excel instead.
+  // Lookup: (time|admin|chat) → issue category for included, non-handler issues
+  const issueLookup={};
+  allIssues.filter(r=>r.include&&!isHandler(r.admin)).forEach(r=>{
+    issueLookup[r.time+'|'+r.admin+'|'+r.chat]=r.catName;
+  });
+  const cd=[['Time','Admin','Replied To','Chat','Issue Category','Is Issue?']];
+  // null (not '') for non-issue rows → SheetJS creates NO cell at all,
+  // so the cells are truly blank and Ctrl+Down jumps to the next issue.
+  allChats.forEach(r=>{
+    const cat=issueLookup[r.time+'|'+r.admin+'|'+r.chat]||null;
+    cd.push([r.time,r.admin,r.replyTo,r.chat,cat,cat?1:null]);
+  });
+  const wsC=XLSX.utils.aoa_to_sheet(cd);
+  wsC['!cols']=[{wch:10},{wch:24},{wch:24},{wch:58},{wch:20},{wch:9}];
   XLSX.utils.book_append_sheet(wb,wsC,'Total Chat');
-  // Spam messages: excluded from Total Issues but NOT exported as a separate sheet
-  const id2=[['Time','Admin','Replied To','Chat','Issue Category']];allIssues.filter(r=>r.include&&!isHandler(r.admin)).forEach(r=>id2.push([r.time,r.admin,r.replyTo,r.chat,r.catName]));
-  const wsI=XLSX.utils.aoa_to_sheet(id2);wsI['!cols']=[{wch:10},{wch:24},{wch:24},{wch:58},{wch:20}];XLSX.utils.book_append_sheet(wb,wsI,'Total Issues');
   const hd=[['Time','Handler','Replied To','Message']];computeHandlerRows().forEach(r=>hd.push([r.time,r.admin,r.replyTo,r.chat]));
   const wsH=XLSX.utils.aoa_to_sheet(hd);wsH['!cols']=[{wch:10},{wch:20},{wch:30},{wch:60}];XLSX.utils.book_append_sheet(wb,wsH,'Handler Replies');
   // Sheet 4: Mandatory Messages
@@ -1644,7 +1712,7 @@ function switchView(v){
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 // Initialise on load
-window.addEventListener('DOMContentLoaded',()=>updateHandlerPills());
+window.addEventListener('DOMContentLoaded',()=>{updateHandlerPills();renderPresetButtons();updateMandatorySourceUI();});
 </script>
 </body>
 </html>
