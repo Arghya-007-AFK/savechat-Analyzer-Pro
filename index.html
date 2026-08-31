@@ -390,6 +390,8 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <option value="march31" selected>31st March Video</option>
       <option value="aug11">11th August Video</option>
       <option value="aug9">9th August Student Video</option>
+      <option value="aug16">16th August Business</option>
+      <option value="aug27">27th August Educators</option>
     </select>
   </div>
 
@@ -582,6 +584,8 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <option value="march31" selected>31st March Video</option>
       <option value="aug11">11th August Video</option>
       <option value="aug9">9th August Student Video</option>
+      <option value="aug16">16th August Business</option>
+      <option value="aug27">27th August Educators</option>
     </select>
   </div>
 
@@ -1341,8 +1345,35 @@ const PRESET_AUG9=buildPreset([
   _mm('Tool Link','Tool 10 – Perplexity Comet','perplexity.ai/comet','Tool 10'),
 ]);
 
-const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9};
-const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video'};
+// 16th August Business Video — ElevenLabs debut, compact 8-tool lineup
+const PRESET_AUG16=buildPreset([
+  _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google.com','Tool 1'),
+  _mm('Tool Link','Tool 2 – WisprFlow','wisprflow.ai','Tool 2'),
+  _mm('Tool Link','Tool 3 – Stitch','stitch.withgoogle.com','Tool 3'),
+  _mm('Tool Link','Tool 4/6 – Claude AI','claude.ai','Tool 4 & 6 (deduped)',
+      {excl:['claude.ai/code','claude.ai/cowork']}),
+  _mm('Tool Link','Tool 5 – Julius AI','julius.ai','Tool 5'),
+  _mm('Tool Link','Tool 7 – Higgsfield','higgsfield.ai','Tool 7'),
+  _mm('Tool Link','Tool 8 – ElevenLabs','elevenlabs.io','Tool 8'),
+]);
+
+// 27th August Educators Video — ChatGPT first, HeyGen debut
+const PRESET_AUG27=buildPreset([
+  _mm('Tool Link','Tool 1 – ChatGPT','chatgpt.com','Tool 1',{excl:'chatgpt.com/g/'}),
+  // CSV uses notebooklm.google/ (no .com) — shorter snippet matches both variants
+  _mm('Tool Link','Tool 2 – NotebookLM','notebooklm.google','Tool 2'),
+  _mm('Tool Link','Tool 3 – WisprFlow','wisprflow.ai','Tool 3'),
+  _mm('Tool Link','Tool 4 – Stitch','stitch.withgoogle.com','Tool 4'),
+  _mm('Tool Link','Tool 5 – AI Studio','aistudio.google.com','Tool 5'),
+  _mm('Tool Link','Tool 6 – Higgsfield','higgsfield.ai','Tool 6'),
+  _mm('Tool Link','Tool 7 – HeyGen','heygen.com','Tool 7'),
+  _mm('Tool Link','Tool 8 – Claude AI','claude.ai','Tool 8',
+      {excl:['claude.ai/code','claude.ai/cowork']}),
+  _mm('Tool Link','Tool 9 – Perplexity Comet','perplexity.ai/comet','Tool 9'),
+]);
+
+const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27};
+const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators'};
 let sessionPreset='march31';
 
 let mandatoryResults = [];       // populated by checkMandatory()
