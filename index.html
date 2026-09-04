@@ -218,8 +218,10 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
 .sc-orange .stat-val{color:#fb923c;}
 .cat-tag{font-size:10px;padding:2px 7px;border-radius:3px;font-family:var(--mono);font-weight:500;background:var(--surface3);color:var(--text2);white-space:nowrap;}
 .mand-time-chip{font-size:11px;font-family:var(--mono);color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 7px;white-space:nowrap;}
-.badge-promo{background:rgba(244,63,94,0.1);color:#fda4af;border:1px solid rgba(244,63,94,0.2);}.badge-promo::before{background:#f43f5e;}
+.badge-promo{background:rgba(244,63,94,0.1);color:#fda4af;border:1px solid rgba(244,63,94,0.2);}
+.badge-toofast{background:rgba(232,121,249,0.1);color:#f0abfc;border:1px solid rgba(232,121,249,0.2);}.badge-promo::before{background:#f43f5e;}
 .cc-rose .cat-name{color:#fb7185;}.cc-rose .cat-num{color:#fb7185;}.cc-rose .cat-bar-fill,.cc-rose::after{background:#f43f5e;}
+.cc-fuchsia .cat-name{color:#e879f9;}.cc-fuchsia .cat-num{color:#e879f9;}.cc-fuchsia .cat-bar-fill,.cc-fuchsia::after{background:#d946ef;}
 .badge-cert{background:rgba(132,204,22,0.1);color:#bef264;border:1px solid rgba(132,204,22,0.2);}.badge-cert::before{background:#84cc16;}
 .cc-lime .cat-name{color:#a3e635;}.cc-lime .cat-num{color:#a3e635;}.cc-lime .cat-bar-fill,.cc-lime::after{background:#84cc16;}
 
@@ -725,6 +727,42 @@ let CATEGORIES=[
    excl:[/\b(engineer|engineering|developer|analyst|architect|administrator|admin|consultant|specialist|technician|professional|profession|designation|automation|implementation|years? of (exp|experience)|working (in|as|at))\b/i],
    exclBypass:[/\b(lag|lagging|laggy|buffering|slow|not working|issue|problem|disconnect|poor|weak|unstable|frozen|freezing|stuck|dropped|dropping|down)\b/i]},
 
+  // ─── Too Fast (session pace complaints) ───────────────────────────────────
+  // English + Hinglish pace complaints. One flagged message per person max
+  // (post-dedup in detectIssues) — repeats stay in Total Chat, just unflagged.
+  {id:'toofast',name:'Too Fast',badge:'badge-toofast',ccls:'cc-fuchsia',
+   keywords:[
+     // "fast" complaint compounds (bare 'fast' too broad: breakfast-safe but "internet is fast" praise isn't)
+     'too fast','very fast','so fast','bit fast','little fast','quite fast',
+     'really fast','extremely fast','super fast','way too fast','fast fast',
+     'going fast','going too fast','moving fast','moving too fast',
+     'speaking fast','speaking too fast','talking fast','talking too fast',
+     'teaching fast','teaching too fast','explaining fast','explaining too fast',
+     'session is fast','session is too fast','session too fast',
+     'too quick','too quickly','very quickly','going too quickly',
+     'too speedy','very speedy','speedy',
+     // Hinglish fast
+     'itna fast','bahut fast','bohot fast','bhut fast','bahot fast',
+     // slow-down requests (= too-fast complaints)
+     'slow down','pls slow','please slow','plz slow','go slow','going slow please',
+     'slowly please','slowly pls','speak slowly','teach slowly','explain slowly',
+     'slow karo','slow kro','slow kar do','slow krde','slow krke','pace slow',
+     'dheere','dhire','haule',
+     // speed-reduction requests
+     'reduce speed','decrease speed','speed kam','kam speed','speed reduce',
+     'lower the speed','lower speed','reduce the pace','reduce pace',
+     'fast pace','pace is fast','pace too fast','pace is too fast',
+     // cant keep up
+     'cant keep up','cannot keep up','unable to keep up','hard to keep up',
+     'difficult to keep up','hard to follow','difficult to follow','tough to follow'
+   ],
+   // "follow the link/page/channel" is not a pace complaint;
+   // "session is too slow" is the OPPOSITE complaint — exclude both
+   excl:[/\b(link|url|website|page|channel|insta|instagram|linkedin|whatsapp)\b/i,
+         /\b(is|too|very|so|quite|really|bit|little)\s+slow\b/i],
+   // ...unless the message also explicitly says fast/quick/speedy
+   exclBypass:[/\b(fast|quick|quickly|speedy)\b/i]},
+
   // ─── Certificate / Link Issues ───────────────────────────────────────────
   // Attendees reporting errors after the certificate link is sent.
   // Placed BEFORE Login/Access so cert-specific messages are caught here first.
@@ -887,7 +925,19 @@ function detectIssues(rows){
       break;
     }
   }
-  return issues;
+  // Too Fast: keep only ONE flagged message per person (their first, chronologically).
+  // Later repeats remain in Total Chat — just not flagged as issues.
+  const seenFast=new Set();
+  const deduped=[];
+  for(const it of issues){
+    if(it.category==='toofast'){
+      const k=it.admin.toLowerCase();
+      if(seenFast.has(k)) continue;
+      seenFast.add(k);
+    }
+    deduped.push(it);
+  }
+  return deduped;
 }
 
 // ── Handler Name Configuration ──────────────────────────────────────────
