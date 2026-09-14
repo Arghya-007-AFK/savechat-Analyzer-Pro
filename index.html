@@ -378,8 +378,8 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <span class="hcc-hint">Comma-separated · add all possible name variants</span>
     </div>
     <input class="inp inp-sm" id="handlerNamesInput"
-           value="Aditya Be10x"
-           placeholder="Aditya Be10X, Aditya - Be10X, Host Name"
+           value="Team be10X"
+           placeholder="Team be10X, Aditya Be10X, Host Name"
            oninput="updateHandlerPills()"/>
     <div id="handlerPills" class="handler-pills"></div>
     <div class="hcc-desc">
@@ -394,6 +394,8 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <option value="aug9">9th August Student Video</option>
       <option value="aug16">16th August Business</option>
       <option value="aug27">27th August Educators</option>
+      <option value="sep6bsai">6th September BSAI</option>
+      <option value="sep6fin">6th September Finance</option>
     </select>
   </div>
 
@@ -565,7 +567,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
     <div class="sec-title">Mandatory Messages Tracker</div>
     <span class="sec-badge" id="tag-mandatory">Load a savechat to check</span>
     <div class="sec-spacer"></div>
-    <span style="font-size:12px;color:var(--text2);">Handler: <strong id="mand-handler-name">Aditya Be10X</strong></span>
+    <span style="font-size:12px;color:var(--text2);">Handler: <strong id="mand-handler-name">Team be10X</strong></span>
   </div>
 
   <!-- CSV Source Bar -->
@@ -588,6 +590,8 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <option value="aug9">9th August Student Video</option>
       <option value="aug16">16th August Business</option>
       <option value="aug27">27th August Educators</option>
+      <option value="sep6bsai">6th September BSAI</option>
+      <option value="sep6fin">6th September Finance</option>
     </select>
   </div>
 
@@ -943,7 +947,7 @@ function detectIssues(rows){
 // ── Handler Name Configuration ──────────────────────────────────────────
 // Single source of truth: handlerNamesInput in the upload view
 function getHandlerNamesArray(){
-  const raw=document.getElementById('handlerNamesInput')?.value||'Aditya Be10x';
+  const raw=document.getElementById('handlerNamesInput')?.value||'Team be10X';
   return raw.split(',').map(n=>n.trim()).filter(Boolean);
 }
 
@@ -1315,8 +1319,8 @@ function updateMandatorySourceUI(){
 //  • `excl` blocks a sub-string that distinguishes the wrong message type
 //    e.g. ChatGPT plain URL vs Custom GPT paths → excl:'chatgpt.com/g/'
 // ── Session presets — mandatory messages per recorded video ──────────
-// Common messages (openers, engagement, sales, closers) are shared;
-// only the numbered tool lineup differs per video.
+// Common messages are shared; each preset lists its tool lineup and can
+// skip closers that session doesn't include (keyed), or replace the pitch.
 function _mm(cat,label,snippet,timing,extra){
   return Object.assign({cat:cat,label:label,snippet:snippet,timing:timing},extra||{});
 }
@@ -1326,29 +1330,34 @@ const _OPENERS=[
   _mm('Tech Support','Blur Video Fix','experiencing blur video','11:10 AM & 11:35 AM'),
   _mm('Tech Support','Audio Fix','facing audio issues, please rejoin','11:30 AM & 11:45 AM'),
 ];
+// Closers carry a `key` so presets can skip or replace individual ones.
+// WhatsApp Channel: removed from all Aug/Sep sessions — only 31st March keeps it.
 const _CLOSERS=[
-  _mm('Engagement','Stay Till End Alert','Important Information. Please ensure you stay until the end','Mid-session'),
-  _mm('Tool Link','Samantha Chatbot','g-68b2bfda04c481919dfb43b5f0796648-samantha','Samantha session'),
+  _mm('Engagement','Stay Till End Alert','Important Information. Please ensure you stay until the end','Mid-session',{key:'stay'}),
+  _mm('Tool Link','Samantha Chatbot','g-68b2bfda04c481919dfb43b5f0796648-samantha','Samantha session',{key:'samantha'}),
   _mm('Engagement','Success Stories Playlist','youtube.com/playlist','During session',
-      {snippets:['youtube.com/playlist','success stories playlist','success-stories','be10x.in/success']}),
+      {key:'success',snippets:['youtube.com/playlist','success stories playlist','success-stories','be10x.in/success']}),
   _mm('Engagement','Referral Program Tracker','ai-share','~2:25 PM',
-      {snippets:['ai-share','be10x.com/ai-share','ai-tools-workshop-ref','be10x.in/ai-tools-workshop-ref']}),
-  _mm('Sales / AICA','AICA Pitch + Payment Link','Join the Certified Al Career Accelerator','~1:37 PM'),
-  _mm('Sales / AICA','Alternative Payment Link','Still facing Payment issues','After AICA pitch'),
+      {key:'referral',snippets:['ai-share','be10x.com/ai-share','ai-tools-workshop-ref','be10x.in/ai-tools-workshop-ref']}),
+  _mm('Sales / AICA','AICA Pitch + Payment Link','Join the Certified Al Career Accelerator','~1:37 PM',{key:'aica'}),
+  _mm('Sales / AICA','Alternative Payment Link','Still facing Payment issues','After pitch',{key:'altpay'}),
   _mm('Closing','LMS App Download Link','Be10X-App-Download','End of session',
-      {snippets:['Be10X-App-Download','download-Be10X-App']}),
-  _mm('Closing','Free Bonuses Link','be10xbonuses','After bonuses reveal'),
-  _mm('Closing','Certificate Link','certx.in/submit','End of session'),
-  _mm('Closing','Feedback / Review Link','workshop-review','2:25 PM'),
-  _mm('Closing','WhatsApp AI Channel','whatsapp.com/channel','After review link'),
-  _mm('Closing','LinkedIn Certificate Post','Tag @be10x','End of session'),
+      {key:'lmsapp',snippets:['Be10X-App-Download','download-Be10X-App']}),
+  _mm('Closing','Free Bonuses Link','be10xbonuses','After bonuses reveal',{key:'bonus'}),
+  _mm('Closing','Certificate Link','certx.in/submit','End of session',{key:'cert'}),
+  _mm('Closing','Feedback / Review Link','workshop-review','2:25 PM',{key:'feedback'}),
+  _mm('Closing','WhatsApp AI Channel','whatsapp.com/channel','After review link',{key:'whatsapp'}),
+  _mm('Closing','LinkedIn Certificate Post','Tag @be10x','End of session',{key:'linkedin'}),
 ];
-function buildPreset(tools){
-  const list=[..._OPENERS,...tools,..._CLOSERS];
-  return list.map((m,i)=>Object.assign({id:i+1},m));
+function buildPreset(tools,opts){
+  opts=opts||{};
+  const skip=new Set(opts.skip||[]);
+  const repl=opts.replace||{};
+  const closers=_CLOSERS.filter(c=>!skip.has(c.key)).map(c=>repl[c.key]||c);
+  return [..._OPENERS,...tools,...closers].map((m,i)=>Object.assign({},m,{id:i+1}));
 }
 
-// 31st March Video — Stitch, Gemini, ChatGPT, n8n lineup
+// 31st March Video — original lineup; only session that still includes WhatsApp Channel
 const PRESET_MARCH31=buildPreset([
   _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google.com','Tool 1'),
   _mm('Tool Link','Tool 2 – WisprFlow','wisprflow.ai','Tool 2'),
@@ -1364,7 +1373,7 @@ const PRESET_MARCH31=buildPreset([
   _mm('Tool Link','Tool 10 – n8n','n8n.io','Tool 10'),
 ]);
 
-// 11th August Video — Claude Code/Cowork, Higgsfield, Yoodli lineup
+// 11th August Video — Claude Code/Cowork, Higgsfield, Yoodli (WhatsApp removed)
 const PRESET_AUG11=buildPreset([
   _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google.com','Tool 1'),
   _mm('Tool Link','Tool 2 – WisprFlow','wisprflow.ai','Tool 2'),
@@ -1378,9 +1387,9 @@ const PRESET_AUG11=buildPreset([
   _mm('Tool Link','Tool 9 – ATS Resume GPT','be10x-ats-resume-generator','Tool 9'),
   _mm('Tool Link','Tool 10 – Yoodli','yoodli.ai','Tool 10'),
   _mm('Tool Link','Tool 11 – Perplexity Comet','perplexity.ai/comet','Tool 11'),
-]);
+],{skip:['whatsapp']});
 
-// 9th August Student Video — Stitch + Higgsfield, no Gemini/n8n
+// 9th August Student Video — WhatsApp AND Samantha removed in updated chatlog
 const PRESET_AUG9=buildPreset([
   _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google.com','Tool 1'),
   _mm('Tool Link','Tool 2 – WisprFlow','wisprflow.ai','Tool 2'),
@@ -1393,9 +1402,9 @@ const PRESET_AUG9=buildPreset([
   _mm('Tool Link','Tool 8 – ChatGPT','chatgpt.com','Tool 8',{excl:'chatgpt.com/g/'}),
   _mm('Tool Link','Tool 9 – Higgsfield','higgsfield.ai','Tool 9'),
   _mm('Tool Link','Tool 10 – Perplexity Comet','perplexity.ai/comet','Tool 10'),
-]);
+],{skip:['whatsapp','samantha']});
 
-// 16th August Business Video — ElevenLabs debut, compact 8-tool lineup
+// 16th August Business — ElevenLabs lineup (WhatsApp removed)
 const PRESET_AUG16=buildPreset([
   _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google.com','Tool 1'),
   _mm('Tool Link','Tool 2 – WisprFlow','wisprflow.ai','Tool 2'),
@@ -1405,12 +1414,11 @@ const PRESET_AUG16=buildPreset([
   _mm('Tool Link','Tool 5 – Julius AI','julius.ai','Tool 5'),
   _mm('Tool Link','Tool 7 – Higgsfield','higgsfield.ai','Tool 7'),
   _mm('Tool Link','Tool 8 – ElevenLabs','elevenlabs.io','Tool 8'),
-]);
+],{skip:['whatsapp']});
 
-// 27th August Educators Video — ChatGPT first, HeyGen debut
+// 27th August Educators — ChatGPT first, HeyGen (WhatsApp removed)
 const PRESET_AUG27=buildPreset([
   _mm('Tool Link','Tool 1 – ChatGPT','chatgpt.com','Tool 1',{excl:'chatgpt.com/g/'}),
-  // CSV uses notebooklm.google/ (no .com) — shorter snippet matches both variants
   _mm('Tool Link','Tool 2 – NotebookLM','notebooklm.google','Tool 2'),
   _mm('Tool Link','Tool 3 – WisprFlow','wisprflow.ai','Tool 3'),
   _mm('Tool Link','Tool 4 – Stitch','stitch.withgoogle.com','Tool 4'),
@@ -1420,10 +1428,40 @@ const PRESET_AUG27=buildPreset([
   _mm('Tool Link','Tool 8 – Claude AI','claude.ai','Tool 8',
       {excl:['claude.ai/code','claude.ai/cowork']}),
   _mm('Tool Link','Tool 9 – Perplexity Comet','perplexity.ai/comet','Tool 9'),
-]);
+],{skip:['whatsapp']});
 
-const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27};
-const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators'};
+// 6th September BSAI — "Build Side Income Using AI" program.
+// Own pitch wording (replaces AICA), Claude Skills debut (claude.com domain).
+const PRESET_SEP6BSAI=buildPreset([
+  _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google.com','Tool 1'),
+  _mm('Tool Link','Tool 2 – WisprFlow','wisprflow.ai','Tool 2'),
+  _mm('Tool Link','Tool 3 – Claude AI','claude.ai','Tool 3',
+      {excl:['claude.ai/code','claude.ai/cowork']}),
+  _mm('Tool Link','Tool 4 – Julius AI','julius.ai','Tool 4'),
+  _mm('Tool Link','Tool 5 – Claude Skills','claude.com/skills','Tool 5'),
+  _mm('Tool Link','Tool 6 – Higgsfield','higgsfield.ai','Tool 6'),
+  _mm('Tool Link','Tool 7 – ElevenLabs','elevenlabs.io','Tool 7'),
+],{skip:['whatsapp','samantha'],
+   replace:{aica:_mm('Sales / BSAI','BSAI Pitch + Payment Link','Build Side Income Using AI','~1:37 PM',{key:'aica'})}});
+
+// 6th September Finance — 11-tool lineup with HeyGen + Yoodli
+const PRESET_SEP6FIN=buildPreset([
+  _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google.com','Tool 1'),
+  _mm('Tool Link','Tool 2 – WisprFlow','wisprflow.ai','Tool 2'),
+  _mm('Tool Link','Tool 3 – Julius AI','julius.ai','Tool 3'),
+  _mm('Tool Link','Tool 4 – Stitch','stitch.withgoogle.com','Tool 4'),
+  _mm('Tool Link','Tool 5 – AI Studio','aistudio.google.com','Tool 5'),
+  _mm('Tool Link','Tool 6 – Higgsfield','higgsfield.ai','Tool 6'),
+  _mm('Tool Link','Tool 7 – HeyGen','heygen.com','Tool 7'),
+  _mm('Tool Link','Tool 8 – Claude AI','claude.ai','Tool 8',
+      {excl:['claude.ai/code','claude.ai/cowork']}),
+  _mm('Tool Link','Tool 9 – ATS Resume GPT','be10x-ats-resume-generator','Tool 9'),
+  _mm('Tool Link','Tool 10 – Yoodli','yoodli.ai','Tool 10'),
+  _mm('Tool Link','Tool 11 – Perplexity Comet','perplexity.ai/comet','Tool 11'),
+],{skip:['whatsapp','samantha']});
+
+const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27,sep6bsai:PRESET_SEP6BSAI,sep6fin:PRESET_SEP6FIN};
+const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators',sep6bsai:'6th September BSAI',sep6fin:'6th September Finance'};
 let sessionPreset='march31';
 
 let mandatoryResults = [];       // populated by checkMandatory()
