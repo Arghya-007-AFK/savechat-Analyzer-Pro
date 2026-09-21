@@ -396,6 +396,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <option value="aug27">27th August Educators</option>
       <option value="sep6bsai">6th September BSAI</option>
       <option value="sep6fin">6th September Finance</option>
+      <option value="sep13tech">13th September Tech</option>
     </select>
   </div>
 
@@ -592,6 +593,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <option value="aug27">27th August Educators</option>
       <option value="sep6bsai">6th September BSAI</option>
       <option value="sep6fin">6th September Finance</option>
+      <option value="sep13tech">13th September Tech</option>
     </select>
   </div>
 
@@ -1458,10 +1460,31 @@ const PRESET_SEP6FIN=buildPreset([
   _mm('Tool Link','Tool 9 – ATS Resume GPT','be10x-ats-resume-generator','Tool 9'),
   _mm('Tool Link','Tool 10 – Yoodli','yoodli.ai','Tool 10'),
   _mm('Tool Link','Tool 11 – Perplexity Comet','perplexity.ai/comet','Tool 11'),
+],{skip:['whatsapp','samantha'],
+   // Finance session pitches the "Certified Al Finance Accelerator" — not Career.
+   // Multi-snippet covers Al/AI spelling variants.
+   replace:{aica:_mm('Sales / Finance','Finance Accelerator Pitch + Payment Link','Certified Al Finance Accelerator','~1:37 PM',
+     {key:'aica',snippets:['Certified Al Finance Accelerator','Certified AI Finance Accelerator']})}});
+
+// 13th September Tech (IT/Software) — n8n returns, Yoodli as Bonus Tool
+const PRESET_SEP13TECH=buildPreset([
+  // CSV links notebooklm.google/ (no .com) — shorter snippet matches both variants
+  _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google','Tool 1'),
+  _mm('Tool Link','Tool 2 – WisprFlow','wisprflow.ai','Tool 2'),
+  _mm('Tool Link','Tool 3 – Stitch','stitch.withgoogle.com','Tool 3'),
+  _mm('Tool Link','Tool 4 – AI Studio','aistudio.google.com','Tool 4'),
+  _mm('Tool Link','Tool 5 – Claude AI','claude.ai','Tool 5',
+      {excl:['claude.ai/code','claude.ai/cowork']}),
+  _mm('Tool Link','Tool 6 – Julius AI','julius.ai','Tool 6'),
+  _mm('Tool Link','Tool 7 – n8n','n8n.io','Tool 7'),
+  _mm('Tool Link','Tool 8 – Higgsfield','higgsfield.ai','Tool 8'),
+  _mm('Tool Link','Tool 9 – ATS Resume GPT','be10x-ats-resume-generator','Tool 9'),
+  _mm('Tool Link','Bonus – Yoodli','yoodli.ai','Bonus Tool'),
+  _mm('Tool Link','Tool 10 – Perplexity Comet','perplexity.ai/comet','Tool 10'),
 ],{skip:['whatsapp','samantha']});
 
-const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27,sep6bsai:PRESET_SEP6BSAI,sep6fin:PRESET_SEP6FIN};
-const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators',sep6bsai:'6th September BSAI',sep6fin:'6th September Finance'};
+const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27,sep6bsai:PRESET_SEP6BSAI,sep6fin:PRESET_SEP6FIN,sep13tech:PRESET_SEP13TECH};
+const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators',sep6bsai:'6th September BSAI',sep6fin:'6th September Finance',sep13tech:'13th September Tech'};
 let sessionPreset='march31';
 
 let mandatoryResults = [];       // populated by checkMandatory()
