@@ -397,6 +397,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <option value="sep6bsai">6th September BSAI</option>
       <option value="sep6fin">6th September Finance</option>
       <option value="sep13tech">13th September Tech</option>
+      <option value="oct1bsai">1st Oct BSAI</option>
     </select>
   </div>
 
@@ -594,6 +595,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <option value="sep6bsai">6th September BSAI</option>
       <option value="sep6fin">6th September Finance</option>
       <option value="sep13tech">13th September Tech</option>
+      <option value="oct1bsai">1st Oct BSAI</option>
     </select>
   </div>
 
@@ -1328,7 +1330,7 @@ function _mm(cat,label,snippet,timing,extra){
 }
 const _OPENERS=[
   _mm('Warmup / Start','Warmup Message','kicking off the session right at','10:50 AM & 10:55 AM'),
-  _mm('Warmup / Start','Welcome Message','Welcome to Be10X AI Tools Workshop Everyone','Exact 11:00 AM'),
+  _mm('Warmup / Start','Welcome Message','Welcome to Be10X AI Tools Workshop Everyone','Exact 11:00 AM',{key:'welcome'}),
   _mm('Tech Support','Blur Video Fix','experiencing blur video','11:10 AM & 11:35 AM'),
   _mm('Tech Support','Audio Fix','facing audio issues, please rejoin','11:30 AM & 11:45 AM'),
 ];
@@ -1355,9 +1357,13 @@ function buildPreset(tools,opts){
   opts=opts||{};
   const skip=new Set(opts.skip||[]);
   const repl=opts.replace||{};
-  const closers=_CLOSERS.filter(c=>!skip.has(c.key)).map(c=>repl[c.key]||c);
-  return [..._OPENERS,...tools,...closers].map((m,i)=>Object.assign({},m,{id:i+1}));
+  const pick=arr=>arr.filter(c=>!skip.has(c.key)).map(c=>(c.key&&repl[c.key])||c);
+  const closers=[...pick(_CLOSERS),...(opts.extraClosers||[])];
+  return [...pick(_OPENERS),...tools,...closers].map((m,i)=>Object.assign({},m,{id:i+1}));
 }
+// Welcome variant used by BSAI sessions ("AI Tools & Side Income Workshop")
+const _WELCOME_BSAI=_mm('Warmup / Start','Welcome Message','AI Tools & Side Income Workshop','Exact 11:00 AM',
+  {key:'welcome',snippets:['AI Tools & Side Income Workshop','Tools & Side Income Workshop Everyone']});
 
 // 31st March Video — original lineup; only session that still includes WhatsApp Channel
 const PRESET_MARCH31=buildPreset([
@@ -1432,19 +1438,23 @@ const PRESET_AUG27=buildPreset([
   _mm('Tool Link','Tool 9 – Perplexity Comet','perplexity.ai/comet','Tool 9'),
 ],{skip:['whatsapp']});
 
-// 6th September BSAI — "Build Side Income Using AI" program.
-// Own pitch wording (replaces AICA), Claude Skills debut (claude.com domain).
+// 6th September BSAI — "Build Side Income Using AI" program (updated CSV).
+// Welcome message differs ("AI Tools & Side Income Workshop"); Stitch labeled
+// Tool 2 with AI Studio inline; own pitch replaces AICA; Claude Skills on claude.com.
 const PRESET_SEP6BSAI=buildPreset([
   _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google.com','Tool 1'),
-  _mm('Tool Link','Tool 2 – WisprFlow','wisprflow.ai','Tool 2'),
-  _mm('Tool Link','Tool 3 – Claude AI','claude.ai','Tool 3',
+  _mm('Tool Link','Tool 2 – Stitch','stitch.withgoogle.com','Tool 2'),
+  _mm('Tool Link','AI Studio','aistudio.google.com','During session'),
+  _mm('Tool Link','Tool 3 – WisprFlow','wisprflow.ai','Tool 3'),
+  _mm('Tool Link','Tool 4 – Claude AI','claude.ai','Tool 4',
       {excl:['claude.ai/code','claude.ai/cowork']}),
-  _mm('Tool Link','Tool 4 – Julius AI','julius.ai','Tool 4'),
-  _mm('Tool Link','Tool 5 – Claude Skills','claude.com/skills','Tool 5'),
-  _mm('Tool Link','Tool 6 – Higgsfield','higgsfield.ai','Tool 6'),
-  _mm('Tool Link','Tool 7 – ElevenLabs','elevenlabs.io','Tool 7'),
+  _mm('Tool Link','Tool 5 – Julius AI','julius.ai','Tool 5'),
+  _mm('Tool Link','Tool 6 – Claude Skills','claude.com/skills','Tool 6'),
+  _mm('Tool Link','Tool 7 – Higgsfield','higgsfield.ai','Tool 7'),
+  _mm('Tool Link','Tool 8 – ElevenLabs','elevenlabs.io','Tool 8'),
 ],{skip:['whatsapp','samantha'],
-   replace:{aica:_mm('Sales / BSAI','BSAI Pitch + Payment Link','Build Side Income Using AI','~1:37 PM',{key:'aica'})}});
+   replace:{welcome:_WELCOME_BSAI,
+            aica:_mm('Sales / BSAI','BSAI Pitch + Payment Link','Build Side Income Using AI','~1:37 PM',{key:'aica'})}});
 
 // 6th September Finance — 11-tool lineup with HeyGen + Yoodli
 const PRESET_SEP6FIN=buildPreset([
@@ -1483,8 +1493,26 @@ const PRESET_SEP13TECH=buildPreset([
   _mm('Tool Link','Tool 10 – Perplexity Comet','perplexity.ai/comet','Tool 10'),
 ],{skip:['whatsapp','samantha']});
 
-const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27,sep6bsai:PRESET_SEP6BSAI,sep6fin:PRESET_SEP6FIN,sep13tech:PRESET_SEP13TECH};
-const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators',sep6bsai:'6th September BSAI',sep6fin:'6th September Finance',sep13tech:'13th September Tech'};
+// 1st October BSAI — Gemini added (Tool 3), WisprFlow unlabeled inline,
+// new labeled "LinkedIn Prompt" message; same BSAI welcome + pitch.
+const PRESET_OCT1BSAI=buildPreset([
+  _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google.com','Tool 1'),
+  _mm('Tool Link','Tool 2 – Stitch','stitch.withgoogle.com','Tool 2'),
+  _mm('Tool Link','Tool 3 – Gemini','gemini.google.com','Tool 3'),
+  _mm('Tool Link','WisprFlow','wisprflow.ai','During session'),
+  _mm('Tool Link','Tool 4 – Claude AI','claude.ai','Tool 4',
+      {excl:['claude.ai/code','claude.ai/cowork']}),
+  _mm('Tool Link','Tool 5 – Julius AI','julius.ai','Tool 5'),
+  _mm('Tool Link','Tool 6 – Higgsfield','higgsfield.ai','Tool 6'),
+  _mm('Tool Link','Tool 7 – Claude Skills','claude.com/skills','Tool 7'),
+  _mm('Tool Link','Tool 8 – ElevenLabs','elevenlabs.io','Tool 8'),
+],{skip:['whatsapp','samantha'],
+   replace:{welcome:_WELCOME_BSAI,
+            aica:_mm('Sales / BSAI','BSAI Pitch + Payment Link','Build Side Income Using AI','~1:37 PM',{key:'aica'})},
+   extraClosers:[_mm('Closing','LinkedIn Prompt','recently completed a 1-day workshop','With LinkedIn post')]});
+
+const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27,sep6bsai:PRESET_SEP6BSAI,sep6fin:PRESET_SEP6FIN,sep13tech:PRESET_SEP13TECH,oct1bsai:PRESET_OCT1BSAI};
+const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators',sep6bsai:'6th September BSAI',sep6fin:'6th September Finance',sep13tech:'13th September Tech',oct1bsai:'1st Oct BSAI'};
 let sessionPreset='march31';
 
 let mandatoryResults = [];       // populated by checkMandatory()
