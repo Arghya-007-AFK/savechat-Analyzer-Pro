@@ -224,6 +224,9 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
 .cc-fuchsia .cat-name{color:#e879f9;}.cc-fuchsia .cat-num{color:#e879f9;}.cc-fuchsia .cat-bar-fill,.cc-fuchsia::after{background:#d946ef;}
 .badge-cert{background:rgba(132,204,22,0.1);color:#bef264;border:1px solid rgba(132,204,22,0.2);}.badge-cert::before{background:#84cc16;}
 .cc-lime .cat-name{color:#a3e635;}.cc-lime .cat-num{color:#a3e635;}.cc-lime .cat-bar-fill,.cc-lime::after{background:#84cc16;}
+/* Paid – Awaiting Confirmation — teal */
+.badge-paidwait{background:rgba(20,184,166,0.12);color:#5eead4;border:1px solid rgba(20,184,166,0.25);}.badge-paidwait::before{background:#14b8a6;}
+.cc-teal .cat-name{color:#2dd4bf;}.cc-teal .cat-num{color:#2dd4bf;}.cc-teal .cat-bar-fill,.cc-teal::after{background:#14b8a6;}
 /* Negative / Bad — darkest red, strongest signal */
 .badge-negative{background:rgba(220,38,38,0.16);color:#fca5a5;border:1px solid rgba(220,38,38,0.4);}.badge-negative::before{background:#dc2626;}
 .cc-slate .cat-name{color:#f87171;}.cc-slate .cat-num{color:#f87171;}.cc-slate .cat-bar-fill,.cc-slate::after{background:#dc2626;}
@@ -308,7 +311,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
   </div>
   <div class="header-right">
     <div class="hdr-status"><span class="status-dot"></span><span id="hdrStatus">Ready</span></div>
-    <div class="hdr-pill">v2.2</div>
+    <div class="hdr-pill">v2.3</div>
   </div>
 </header>
 
@@ -552,6 +555,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
           <option value="badge-audio">Amber</option><option value="badge-recorded">Red</option>
           <option value="badge-network">Cyan</option><option value="badge-login">Blue</option>
           <option value="badge-payment">Orange</option>
+          <option value="badge-paidwait">Teal</option>
           <option value="badge-negative">Negative (Dark Red)</option>
         </select>
       </div>
@@ -737,7 +741,9 @@ let CATEGORIES=[
    // Safety net: profession/intro context (host asks age + profession) is never
    // a network issue — unless a genuine complaint word is also present
    excl:[/\b(engineer|engineering|developer|analyst|architect|administrator|admin|consultant|specialist|technician|professional|profession|designation|automation|implementation|years? of (exp|experience)|working (in|as|at))\b/i],
-   exclBypass:[/\b(lag|lagging|laggy|buffering|slow|not working|issue|problem|disconnect|poor|weak|unstable|frozen|freezing|stuck|dropped|dropping|down)\b/i]},
+   exclBypass:[/\b(lag|lagging|laggy|buffering|slow|not working|issue|problem|disconnect|poor|weak|unstable|frozen|freezing|stuck|dropped|dropping|down)\b/i],
+   // "payment page not loading" is a Payment Issue, not a network complaint
+   hardExcl:[/\b(payment|pay|paying)\s+(link|page|portal|option|options|button|gateway|qr|screen|site|website|form)\b|\b(upi|qr|qr code|scanner|gpay|phonepe|phone pe|paytm|razorpay|netbanking|net banking|debit card|credit card)\b/i]},
 
   // ─── Too Fast (session pace complaints) ───────────────────────────────────
   // English + Hinglish pace complaints. One flagged message per person max
@@ -802,15 +808,17 @@ let CATEGORIES=[
    ],
    // Exclude: people asking for the link (not reporting a problem with it)
    excl:[
-     /(send|share|give|provide|what is|where is)\s+(me\s+)?(the\s+)?(cert|certificate|link)/i,
-     /(can\s+(you|we)|please)\s+(send|share|provide)/i,
-     /(want|need|looking for)\s+(the\s+)?(cert|certificate|link)/i,
+     /\b(send|share|give|provide|what is|where is)\s+(me\s+)?(the\s+)?(cert|certificate|link)\b/i,
+     /\b(can\s+(you|we)|please)\s+(send|share|provide)\b/i,
+     /\b(want|need|looking for)\s+(the\s+)?(cert|certificate|link)\b/i,
      // Positive confirmations — certificate successfully received/generated
-     /(got|received|generated|downloaded|completed)\s+(my\s+|the\s+)?certificate/i,
-     /certificate\s+(received|done|generated|downloaded|completed|worked|working|is ready|ready)/i,
-     /thank(s| you)\s+(for|very much)/i,
-     /(got my|have my|i got|i have)\s+certificate/i
-   ]},
+     /\b(got|received|generated|downloaded|completed)\s+(my\s+|the\s+)?certificate\b/i,
+     /\bcertificate\s+(received|done|generated|downloaded|completed|worked|working|is ready|ready)\b/i,
+     /\bthank(s| you)\s+(for|very much)\b/i,
+     /\b(got my|have my|i got|i have)\s+certificate\b/i
+   ],
+   // payment link / page problems belong to Payment Issues, not the certificate form
+   hardExcl:[/\b(payment|pay|paying)\s+(link|page|portal|option|options|button|gateway|qr|screen|site|website|form)\b|\b(upi|qr|qr code|scanner|gpay|phonepe|phone pe|paytm|razorpay|netbanking|net banking|debit card|credit card)\b/i]},
 
   // ─── Login / Access ───────────────────────────────────────────────────────
   {id:'login',name:'Login / Access',badge:'badge-login',ccls:'cc-blue',
@@ -823,18 +831,118 @@ let CATEGORIES=[
          /\bhow\s+(can|do|to)\s+(i|we|one)\s+(join|register)/i,
          /\balready\s+(registered|enrolled|a member|in the program)/i,
          /\byes[,.]?\s+(i\s+)?want\s+to\s+(join|register)/i],
-   exclBypass:[/can.t|cannot|not\s+able|not\s+working|error|failed|issue|problem|not\s+(get|getting|received|found)|link\s+not|expired|invalid/i]},
+   exclBypass:[/can.t|cannot|not\s+able|not\s+working|error|failed|issue|problem|not\s+(get|getting|received|found)|link\s+not|expired|invalid/i],
+   // payment link / page / UPI / QR problems belong to Payment Issues, not Login
+   hardExcl:[/\b(payment|pay|paying)\s+(link|page|portal|option|options|button|gateway|qr|screen|site|website|form)\b|\b(upi|qr|qr code|scanner|gpay|phonepe|phone pe|paytm|razorpay|netbanking|net banking|debit card|credit card)\b/i]},
 
-  // ─── Payment Issues ───────────────────────────────────────────────────────
-  // Strategy: require at least one COMPLAINT SIGNAL.
-  // Confirmations ("payment done", "paid", "completed payment") have NO complaint
-  // signal and will NOT be flagged. Only actual problems get through.
+  // ─── Payment Issues (STRICT) ──────────────────────────────────────────────
+  // Flags ONLY an actual problem with a transaction:
+  //   failed / error / declined / stuck / pending status / deducted but not credited /
+  //   "showing unpaid" / double charge / wrong amount / refund request / can't pay (technical) /
+  //   QR-UPI-card-link not working / no way to pay.
+  // It does NOT flag: tool-pricing talk ("is it free or paid?", "paid version"), money/career
+  // questions, affordability ("can't pay this much"), refund-policy questions, dev questions
+  // ("connect the payment gateway"), or "I paid but you didn't call my name / no confirmation"
+  // — those post-payment follow-ups go to the next category, Paid – Awaiting Confirmation.
+  //
+  // Mechanics: keywords = transaction-context words (just a cheap pre-filter);
+  // exclMode:'strip' removes benign idioms; then `req` demands a transaction-FAILURE signal
+  // sitting NEAR a transaction term (same sentence, ≤45 chars) — not just any "not".
   {id:'payment',name:'Payment Issues',badge:'badge-payment',ccls:'cc-orange',
-   keywords:['payment','pay','paid','refund','charge','debit','credit','money',
-             'amount','receipt','invoice','transaction','not received','didnt get',
-             'qr code','qr not','scanner','upi'],
-   // Must contain at least one of these problem indicators to be flagged:
-   req:[/\b(not|no|failed|fail|failure|error|issue|problem|pending|refund|wrong|double|twice|deducted|missing|overcharged|incorrect|declined|rejected|bounced|dispute|chargeback|unsuccessful|didn.?t|didnt|did not|cant|cannot|unable|not\s+done|not\s+processed|not\s+successful|not\s+received|not\s+getting|not\s+reflecting|not\s+credited|not\s+working)\b/i]},
+   desc:'failed / pending / deducted / double charged / refund / can\'t pay — real transaction problems only',
+   keywords:[
+     // strong transaction terms
+     'payment','payments','transaction','transactions','txn','upi','gpay','g pay','google pay','phonepe','phone pe',
+     'paytm','razorpay','netbanking','net banking','internet banking','debit card','credit card','my card','card','cards',
+     'emi','qr','qr code','scanner','scan code','checkout','gateway','payment link','pay link','payment page','payment portal',
+     'payment option','payment method','payment button','payment gateway','bank transfer','neft','imps','rtgs','bhim','wallet',
+     // weak money terms (need a STRONG failure signal to count)
+     'pay','paying','paid','pays','money','amount','paisa','paise','paisey','fee','fees','rs','inr','₹','rupees',
+     // outcome words
+     'deducted','debited','refund','refunded','refunds','charged'
+   ],
+   exclMode:'strip',
+   excl:[
+     // ── tool-pricing talk ("is it free or paid", "paid version", "<tool> ... paid/free/credits") ──
+     /\b(paid|pay|paying|pays|free)\s+(version|versions|tool|tools|ai tools?|account|accounts|acccount|plan|plans|subscription|subscriptions|app|apps|only|user|users|feature|features|model|models|api|tier|option|options|service|services|software|credits?|access|course|courses|content|membership)\b/i,
+     /\b(is|are|its|it's|it is|was|were|be|become|becomes|became|remain|remains|only|or|free or|went|gone|fully|completely|totally|need|needs|require|requires|requiring|needed|required)\s+(not\s+)?(a\s+)?paid\b/i,
+     /\b(chatgpt|chat gpt|gpt|claude|gemini|notebooklm|notebook ?llm|julius|higgsfield|higgsfiled|higgssfiled|higgs ?field|stitch|eleven ?labs?|elevenlab|heygen|yoodli|perplexity|comet|n8n|canva|wisprflow|wispr|midjourney|runway|sora|kling|veo|copilot|cursor|lovable|replit|bolt|openai|anthropic|ai studio|aistudio|ai tools?|the tools?|this tool|these tools|those tools|tool|tools|app|apps|software|llm|llms|model|models)\b[^.?!\n]{0,40}\b(paid|pay|paying|free|freemium|premium|subscription|subscriptions|credits?|plan|plans|version|versions|pro|plus|pricing|price|cost)\b/i,
+     /\b(paid|pay|paying|free|freemium|premium|subscription|subscriptions|credits?|plan|plans|version|versions|pricing|price|cost)\b[^.?!\n]{0,40}\b(chatgpt|chat gpt|gpt|claude|gemini|notebooklm|notebook ?llm|julius|higgsfield|higgsfiled|higgssfiled|higgs ?field|stitch|eleven ?labs?|elevenlab|heygen|yoodli|perplexity|comet|n8n|canva|wisprflow|wispr|midjourney|runway|sora|kling|veo|copilot|cursor|lovable|replit|bolt|openai|anthropic|ai studio|aistudio|ai tools?|the tools?|this tool|these tools|those tools|tool|tools|app|apps|software|llm|llms|model|models)\b/i,
+     /\b(free|freemium|premium|subscription|subscribe|trial|credits?|tokens?|pricing|price|costly|expensive|cheap|affordable|per month|monthly|yearly|annual|lifetime)\b/i,
+     // ── "pay" / "paid" in non-transaction senses ──
+     /\bpay\s+(attention|off|scale|hike|raise|cut|grade|slip|roll|cheque|day|rate|later|as you go)\b|\bpays off\b|\bpaycheck\b|\bpayroll\b/i,
+     /\bpaid\s+(internship|intern|interns|job|jobs|work|projects?|freelanc\w*|promotion|ads?|advertis\w*|marketing|media|campaigns?|leave|holiday|collaboration|partnership|gig|gigs)\b/i,
+     // ── money / amount idioms (earning, spending, "amount of time") ──
+     /\b(make|making|made|earn|earning|earned|spend|spending|spent|save|saving|saved|invest|investing|raise|raising|how much|any|no|some|more|extra|enough|easy|good|big|real|passive|black|white|lot of|lots of|much|less|little|quick|fast)\s+money\b/i,
+     /\bmoney\s+(making|back guarantee|for|to|minded|matters|management|from|in|on|with|wise|flow|supply|market)\b/i,
+     /\bamount of\b|\b(large|huge|small|big|certain|same|total|data|text)\s+amount\b/i,
+     // ── "card" in non-payment senses ──
+     /\b(business|visiting|id|identity|flash|greeting|graphics|gift|sim|aadhar|aadhaar|pan|voter|report|score|rate|wedding|invitation|name|birthday|anniversary)\s+cards?\b|\bcards?\s+(design|designs|designer|layout|templates?|maker|generator)\b/i,
+     // ── transaction DATA (analytics demos), not a transaction ──
+     /\btransactions?\s+(data|dataset|csv|file|excel|sheet|history|records?|report|table|analysis|column|columns|log|logs)\b|\b(sales|bank|customer|daily|monthly)\s+transactions?\b/i,
+     // ── developer questions about building/integrating a gateway ──
+     /\b(integrate|integrating|integration|connect|connecting|add|adding|setup|set up|implement|implementing|build|building|create|creating|code|coding|api|website|site|app|develop|developing)\b[^.?!\n]{0,25}\b(payment gateway|gateway|checkout|razorpay|stripe|paypal|payment system|payment page)\b/i,
+     /\b(payment gateway|gateway|checkout|razorpay|stripe|paypal|payment system)\b[^.?!\n]{0,25}\b(integration|integrate|integrating|api|setup|set up|code|coding|website|site|app|development|develop)\b/i,
+     // ── QR for whatsapp/group/telegram — not the payment QR ──
+     /\b(whatsapp|group|community|telegram|channel|join)\b[^.?!\n]{0,15}\bqr\b|\bqr\b[^.?!\n]{0,15}\b(whatsapp|group|community|telegram|channel|to join)\b/i,
+     // ── affordability, not a transaction failure ("can't pay this much", "no money", "parents not ready") ──
+     /\b(unable|not able|cant|can.?t|cannot|couldn.?t|couldnt|could not|can.?t able|cant able|not possible)\s+(to\s+)?(afford|pay)\b[^.?!\n]{0,50}\b(this much|that much|so much|such amount|such a|afford|expensive|costly|mehenga|mehnga|no money|no job|jobless|unemployed|budget|salary|student|parents|family|father|mother|financial|finance|right now|at the moment|at this time|this month|now|today|currently|yet)\b/i,
+     /\bfinancial(ly)?\s+(issue|issues|problem|problems|crisis|trouble|difficulty|difficulties|condition|situation|constraint|constraints)\b|\b(no|without|dont have|don.?t have|not having|not have|have no)\s+(the\s+|enough\s+|any\s+|much\s+)?(money|funds|fund|paise|paisa|budget|job|income|savings)\b/i,
+     /\b(fees?|amount|price|cost)\s+(is|are|was)\s+(too\s+|very\s+|so\s+)?(high|much|expensive|costly)\b|\bexpensive\b|\bcostly\b/i,
+     // ── refund-POLICY questions, not refund requests ──
+     /\b(will|would|is|are|does|if|what if|in case|suppose|is there any|is there|any|how about)\b[^.?!\n]{0,35}\b(refund|refunded|refundable|refunds|money back)\b/i,
+     /\b(refund|refunds|refundable|money back)\b[^.?!\n]{0,40}\b(if|in case|policy|policies|available|possible|option|guarantee)\b/i,
+     // ── explicit "no payment issue" ──
+     /\b(no|not a|not any|without any|don.?t have|dont have|didn.?t have|had no|zero)\s+(payment\s+|pay\s+)?(issue|issues|problem|problems)\b|\b(no|without)\s+(issue|issues|problem|problems)\s+(with|in|for)\s+(the\s+|my\s+)?(payment|paying|pay)\b/i
+   ],
+   // Transaction term + FAILURE signal in the same sentence (any one of these):
+   req:[
+     // R1/R2 — strong transaction term near a strong-or-weak failure signal (either order)
+     /\b(payment|payments|transaction|txn|upi|gpay|g pay|google pay|phonepe|phone pe|paytm|razorpay|netbanking|net banking|internet banking|debit card|credit card|my card|card|cards|emi|qr|qr code|scanner|scan code|checkout|gateway|payment link|pay link|payment page|payment portal|payment option|payment method|payment button|bank transfer|neft|imps|rtgs|bhim|wallet)\b[^.?!\n]{0,70}\b(fail|failed|failing|failure|fails|error|errors|declined|decline|rejected|reject|unsuccessful|unsuccessfull|stuck|hang|hanging|hangs|pending|expired|expire|invalid|timeout|timed out|time out|glitch|not working|isn.?t working|is not working|not processed|not processing|not successful|not accepted|not accepting|not opening|not loading|not happening|not going through|not getting through|not reflecting|not reflected|not updated|not updating|not showing|not credited|not completed|not complete|not done|not scanning|not available|not supported|not received by you|nahi ho raha|nhi ho rha|nahi ho rha|nhi ho raha|nahi hua|nhi hua|nahi hui|nhi hui|nahi chal raha|nhi chal rha|nahi khul raha|nhi khul rha|error aa raha|error aa rha|error aa|fail ho|atak|atka|atki|showing (unpaid|not paid|pending|failed|error|due|incomplete)|showing (me )?(that )?(i |we |you )?(did not|didn.?t|didnt|have not|haven.?t|havent|not) (pay|paid)|shows (unpaid|not paid|pending|failed)|status (is |showing |shows |as )?(pending|failed|unpaid|incomplete|not paid)|unpaid|issue|issues|problem|problems|trouble|dikkat|cant|can.?t|cannot|unable|not able|couldn.?t|couldnt|could not|not work|wont work|won.?t work|doesn.?t work|does not work)\b/i,
+     /\b(fail|failed|failing|failure|fails|error|errors|declined|decline|rejected|reject|unsuccessful|unsuccessfull|stuck|hang|hanging|hangs|pending|expired|expire|invalid|timeout|timed out|time out|glitch|not working|isn.?t working|is not working|not processed|not processing|not successful|not accepted|not accepting|not opening|not loading|not happening|not going through|not getting through|not reflecting|not reflected|not updated|not updating|not showing|not credited|not completed|not complete|not done|not scanning|not available|not supported|nahi ho raha|nhi ho rha|nahi ho rha|nhi ho raha|nahi hua|nhi hua|nahi hui|nhi hui|nahi chal raha|nhi chal rha|nahi khul raha|nhi khul rha|error aa raha|error aa rha|error aa|fail ho|atak|atka|atki|showing (unpaid|not paid|pending|failed|error|due|incomplete)|showing (me )?(that )?(i |we |you )?(did not|didn.?t|didnt|have not|haven.?t|havent|not) (pay|paid)|shows (unpaid|not paid|pending|failed)|status (is |showing |shows |as )?(pending|failed|unpaid|incomplete|not paid)|unpaid|issue|issues|problem|problems|trouble|dikkat|cant|can.?t|cannot|unable|not able|couldn.?t|couldnt|could not|not work|wont work|won.?t work|doesn.?t work|does not work)\b[^.?!\n]{0,70}\b(payment|payments|transaction|txn|upi|gpay|g pay|google pay|phonepe|phone pe|paytm|razorpay|netbanking|net banking|internet banking|debit card|credit card|my card|card|cards|emi|qr|qr code|scanner|scan code|checkout|gateway|payment link|pay link|payment page|payment portal|payment option|payment method|payment button|bank transfer|neft|imps|rtgs|bhim|wallet)\b/i,
+     // R3/R4 — weak money term near a STRONG failure signal only (either order)
+     /\b(pay|paying|paid|pays|money|amount|paisa|paise|paisey|fee|fees|rs|inr|₹|rupees)\b[^.?!\n]{0,55}\b(fail|failed|failing|failure|fails|error|errors|declined|decline|rejected|reject|unsuccessful|unsuccessfull|stuck|hang|hanging|hangs|pending|expired|expire|invalid|timeout|timed out|time out|glitch|not working|isn.?t working|is not working|not processed|not processing|not successful|not accepted|not accepting|not going through|not getting through|not reflecting|not reflected|not updated|not updating|not credited|not scanning|showing (unpaid|not paid|pending|failed|error|due|incomplete)|showing (me )?(that )?(i |we |you )?(did not|didn.?t|didnt|have not|haven.?t|havent|not) (pay|paid)|shows (unpaid|not paid|pending|failed)|status (is |showing |shows |as )?(pending|failed|unpaid|incomplete|not paid)|unpaid|nahi ho raha|nhi ho rha|nahi ho rha|nhi ho raha|nahi hua|nhi hua|nahi hui|nhi hui|error aa raha|error aa rha|error aa|fail ho|atak|atka|atki)\b/i,
+     /\b(fail|failed|failing|failure|fails|error|errors|declined|decline|rejected|reject|unsuccessful|unsuccessfull|stuck|hang|hanging|hangs|pending|expired|expire|invalid|timeout|timed out|time out|glitch|not working|isn.?t working|is not working|not processed|not processing|not successful|not accepted|not accepting|not going through|not getting through|not reflecting|not reflected|not updated|not updating|not credited|not scanning|showing (unpaid|not paid|pending|failed|error|due|incomplete)|showing (me )?(that )?(i |we |you )?(did not|didn.?t|didnt|have not|haven.?t|havent|not) (pay|paid)|shows (unpaid|not paid|pending|failed)|status (is |showing |shows |as )?(pending|failed|unpaid|incomplete|not paid)|unpaid|nahi ho raha|nhi ho rha|nahi ho rha|nhi ho raha|nahi hua|nhi hua|nahi hui|nhi hui|error aa raha|error aa rha|error aa|fail ho|atak|atka|atki)\b[^.?!\n]{0,55}\b(pay|paying|paid|pays|money|amount|paisa|paise|paisey|fee|fees|rs|inr|₹|rupees)\b/i,
+     // R5 — money deducted / debited (any phrasing, English + Hinglish)
+     /\b(deducted|debited|got cut|kat ?(gaya|gaye|gye|gya|gayi|gyi)|paise (gaye|gye|chale gaye|chle gye|kat)|paisa (gaya|gya|chala gaya|kat)|money (cut|gone|went|got deducted|has gone|is gone)|amount (cut|got deducted|is deducted|has been deducted|gone))\b/i,
+     // R6 — double / repeated charge
+     /\b(double|twice|two times|2 times|dubara|do baar|2 baar|multiple times|again)\b[^.?!\n]{0,30}\b(paid|payment|charged|deducted|debited|cut)\b|\b(paid|payment|charged|deducted|debited)\b[^.?!\n]{0,30}\b(double|twice|two times|2 times|dubara|do baar|2 baar|multiple times)\b/i,
+     // R7 — refund request / demand (policy questions are stripped above)
+     /\b(refund|refunded|refunds|money back|paisa wapas|paise wapas|paisa vapas|paise vapas|paisa wapis|paise wapis|return my money|give (me )?my money)\b/i,
+     // R8 — wrong / extra amount charged
+     /\b(wrong|incorrect|extra|excess|more|higher|different|full)\s+(amount|charge|charged|deducted|deduction|price charged|money (deducted|charged|taken))\b|\b(charged|deducted|debited|taken)\s+(more|extra|wrong|twice|double|full amount)\b/i,
+     // R9 — can't pay (affordability phrasings are stripped above, so what remains is technical)
+     /\b(unable|not able|cant|can.?t|cannot|couldn.?t|couldnt|could not|can.?t able|cant able)\s+(to\s+)?(pay|make (the |a |my )?payment|complete (the |my )?payment|do (the |my )?payment|proceed (with|to) (the )?payment|process (the )?payment)\b|\b(payment|pay)\s+(nahi|nhi|ni)\s+(ho|hua|hui|kar|kr)\b/i,
+     // R10 — no way to pay
+     /\bno\s+(facility|option|way|method|link|button|page)\s+(to\s+|for\s+|of\s+)?(pay|payment|paying)\b|\b(payment|pay)\s+(link|option|button|page|qr)\s+(not|nahi|nhi)\s+(there|available|given|shared|sent|showing|visible|mila|mil raha|mil rha|aaya|aya)\b/i
+   ]},
+
+  // ─── Paid – Awaiting Confirmation ─────────────────────────────────────────
+  // "I have paid, but …" with NO transaction failure: no confirmation / acknowledgement / reply,
+  // name not called / not announced, seat not confirmed, invite / access / receipt not received.
+  // Not a payment failure (that's the category above, which runs first), but a real follow-up
+  // the support desk needs to see. Delete this category in Config if you don't want it.
+  {id:'paidwait',name:'Paid – Awaiting Confirmation',badge:'badge-paidwait',ccls:'cc-teal',
+   desc:'customer says they already paid but got no confirmation / reply / seat / name call / invite / access',
+   keywords:['paid','pay','payment','payments','paise','paisa','utr','transaction id','txn id','fees','fee','amount','transferred','bought','purchased'],
+   exclMode:'strip',
+   excl:[
+     // they have NOT paid / conditional on paying → not a paid follow-up
+     /\b(not|never|havent|haven.?t|have not|hasnt|hasn.?t|has not|didnt|didn.?t|did not|yet to|without|before|if i|if we|once i|after i|should i|can i|how to|how do i|where to|when to|will)\s+(have\s+|be\s+)?(paid|pay|paying|make (the )?payment|do (the )?payment)\b|\bunpaid\b|\bnot yet paid\b|\byet to pay\b/i,
+     // tool-pricing talk and non-transaction "paid"/"pay" (same as Payment Issues)
+     /\b(paid|pay|paying|pays|free)\s+(version|versions|tool|tools|ai tools?|account|accounts|acccount|plan|plans|subscription|subscriptions|app|apps|only|user|users|feature|features|model|models|api|tier|option|options|service|services|software|credits?|access|course|courses|content|membership)\b/i,
+     /\b(is|are|its|it's|it is|was|were|be|become|becomes|became|remain|remains|only|or|free or|went|gone|fully|completely|totally|need|needs|require|requires|requiring|needed|required)\s+(not\s+)?(a\s+)?paid\b/i,
+     /\b(chatgpt|chat gpt|gpt|claude|gemini|notebooklm|notebook ?llm|julius|higgsfield|higgsfiled|higgssfiled|higgs ?field|stitch|eleven ?labs?|elevenlab|heygen|yoodli|perplexity|comet|n8n|canva|wisprflow|wispr|midjourney|runway|sora|kling|veo|copilot|cursor|lovable|replit|bolt|openai|anthropic|ai studio|aistudio|ai tools?|the tools?|this tool|these tools|those tools|tool|tools|app|apps|software|llm|llms|model|models)\b[^.?!\n]{0,40}\b(paid|pay|paying|free|freemium|premium|subscription|subscriptions|credits?|plan|plans|version|versions|pro|plus|pricing|price|cost)\b/i,
+     /\b(paid|pay|paying|free|freemium|premium|subscription|subscriptions|credits?|plan|plans|version|versions|pricing|price|cost)\b[^.?!\n]{0,40}\b(chatgpt|chat gpt|gpt|claude|gemini|notebooklm|notebook ?llm|julius|higgsfield|higgsfiled|higgssfiled|higgs ?field|stitch|eleven ?labs?|elevenlab|heygen|yoodli|perplexity|comet|n8n|canva|wisprflow|wispr|midjourney|runway|sora|kling|veo|copilot|cursor|lovable|replit|bolt|openai|anthropic|ai studio|aistudio|ai tools?|the tools?|this tool|these tools|those tools|tool|tools|app|apps|software|llm|llms|model|models)\b/i,
+     /\bpay\s+(attention|off|scale|hike|raise|cut|grade|slip|roll|cheque|day|rate|later|as you go)\b|\bpays off\b|\bpaycheck\b|\bpayroll\b/i,
+     /\bpaid\s+(internship|intern|interns|job|jobs|work|projects?|freelanc\w*|promotion|ads?|advertis\w*|marketing|media|campaigns?|leave|holiday|collaboration|partnership|gig|gigs)\b/i,
+     /\b(make|making|made|earn|earning|earned|spend|spending|spent|save|saving|saved|invest|investing|how much|any|no|some|more|extra|enough|easy|good|big|real|passive|lot of|lots of|much|less|little)\s+money\b|\bamount of\b/i
+   ],
+   // BOTH must be present: a "paid" signal AND a "waiting / not received" signal
+   reqAll:[
+     /\b(paid|have pay|had pay|already pay|i pay|we pay|made (the |my |a )?payment|done (the |my |with )?(inr |rs\.? |₹)?[\d,.]*\s*payment|did (the |my |a )?(inr |rs\.? |₹)?[\d,.]*\s*payment|completed? (the |my )?payment|payment (is |was |has been |have been |already |also |got |has |have )?(done|made|completed|complete|successful|success|received|cleared|sent|over)|payment (kar|kr) (diya|di|liya|chuka|chuki|dia)|pay (kar|kr) (diya|di|liya|chuka|chuki|dia)|paise (bhej|de|bhej diye|de diye)|paisa (bhej|de|bhej diya|de diya)|transferred|transfered|utr|txn id|transaction id|reference (no|number|id)|(since|after|post) (my |the )?payment|my payment (was|is|got|has|have|still|also)\b|bought|purchased|i am paid|i m paid|im paid|amount (paid|sent|transferred))\b/i,
+     /\b(no|not|didn.?t|didnt|did not|haven.?t|havent|have not|hasn.?t|hasnt|has not|not yet|still no|still not|yet no|yet to|waiting|awaiting|wating|when (will|do|can|would)|kab|nahi|nhi|ni|but)\b[^.?!\n]{0,40}\b(confirm\w*|acknowledg\w*|acknowldg\w*|repl\w*|respond\w*|response|answer\w*|call\w*|said|say|take|took|taking|taken|announce\w*|mention\w*|name|seat|seats|invite|invitation|mail|email|message|msg|whatsapp|access|link|receipt|invoice|added|enroll\w*|register\w*|batch|group|update|intimation|communication|heard|hear|shout|shoutout|shout out|shut out)\b|\b(confirm\w*|acknowledg\w*|repl\w*|response|respond\w*|name|seat|seats|invite|invitation|receipt|invoice|access|link|mail|email|message|msg|shout ?out)\b[^.?!\n]{0,30}\b(not|no|nahi|nhi|didn.?t|didnt|pending|yet|still|kab|when|or not)\b|\b(want|need|please|pls|plz|kindly|give|send|share|confirm)\b[^.?!\n]{0,25}\b(confirmation|acknowledg\w*|receipt|invoice|invite|confirm|seat|access|my name)\b/i
+   ]},
 
   // ─── Promotion Complaints ──────────────────────────────────────────────────
   // Attendees complaining about too much promotion / selling during the session.
@@ -1186,10 +1294,15 @@ function detectIssues(rows){
     if(isHandler(row.admin)) continue;
     for(const cat of CATEGORIES){
 
+      let text=row.chat; // may be replaced by the stripped text in exclMode:'strip'
       // STEP 1 — keyword match (word-boundary) OR optional raw regex patterns
       // (cat.patterns lets a category catch obfuscated / shape-based text such as
       //  "f**k", "b.c", "m@darch*d" that no literal keyword can express)
       if(!catKeywordHit(cat,row.chat)&&!(cat.patterns&&cat.patterns.some(p=>p.test(row.chat)))) continue;
+
+      // STEP 1.2 — hard exclusion: unconditional veto, no bypass (used to release payment-page /
+      // payment-link / UPI / QR messages from Login, Network and Cert so they reach Payment Issues)
+      if(cat.hardExcl&&cat.hardExcl.some(p=>p.test(row.chat))) continue;
 
       // STEP 1.5 — cert time gate
       // Only flag cert issues AFTER the handler first sent the certificate link to Everyone.
@@ -1211,6 +1324,7 @@ function detectIssues(rows){
           if(stripped!==row.chat){
             const still=catKeywordHit(cat,stripped)||(cat.patterns&&cat.patterns.some(p=>p.test(stripped)));
             if(!still) continue;
+            text=stripped; // req / reqAll below are evaluated on the stripped text too
           }
         } else {
           const excluded=cat.excl.some(p=>p.test(row.chat));
@@ -1222,19 +1336,21 @@ function detectIssues(rows){
       }
 
       // STEP 3 — require-complaint check
-      // For "recorded": req acts as a complaint GATE gated by excl (old behaviour)
-      // For "payment" / "audio": req acts as a MANDATORY gate — message must contain
-      //   at least one complaint signal regardless of excl
+      //   req    → at least ONE pattern must match   (e.g. Payment: a transaction-failure signal)
+      //   reqAll → EVERY pattern must match          (e.g. Paid–Awaiting: "paid" AND "waiting")
+      //   For "recorded": req acts as a complaint gate only when an excl pattern also fired (old behaviour)
+      //   In exclMode:'strip' categories these run on the stripped text, so benign idioms can't satisfy them.
       if(cat.req&&cat.req.length){
-        const hasComplaintSignal=cat.req.some(p=>p.test(row.chat));
+        const hasComplaintSignal=cat.req.some(p=>p.test(text));
         if(cat.id==='recorded'){
-          // recorded: only apply req gate if excluded patterns also fired
-          const excluded=cat.excl&&cat.excl.some(p=>p.test(row.chat));
+          const excluded=cat.excl&&cat.excl.some(p=>p.test(text));
           if(excluded&&!hasComplaintSignal) continue;
         } else {
-          // payment / audio: always require at least one complaint signal
           if(!hasComplaintSignal) continue;
         }
+      }
+      if(cat.reqAll&&cat.reqAll.length){
+        if(!cat.reqAll.every(p=>p.test(text))) continue;
       }
 
       issues.push({...row,category:cat.id,catName:cat.name,badge:cat.badge,include:true});
@@ -2100,7 +2216,7 @@ function addKwToCat(ci){const inp=document.getElementById(`kw-add-${ci}`);const 
 function removeCat(i){if(!confirm(`Remove category "${CATEGORIES[i].name}"?`))return;CATEGORIES.splice(i,1);renderConfigCards();populateIssueFilter();}
 function addKwTag(e){if(e.key!=='Enter'&&e.key!==',')return;e.preventDefault();const inp=document.getElementById('newCatKwInput');const v=inp.value.replace(',','').trim();if(!v||newCatKws.includes(v))return;newCatKws.push(v);inp.value='';renderNewTags();}
 function renderNewTags(){document.getElementById('newCatTags').innerHTML=newCatKws.map((kw,i)=>`<span class="kw-tag">${kw}<span class="kw-rm" onclick="newCatKws.splice(${i},1);renderNewTags()">×</span></span>`).join('');}
-function addCustomCategory(){const name=document.getElementById('newCatName').value.trim();const badge=document.getElementById('newCatColor').value;if(!name||!newCatKws.length){alert('Please add a name and at least one keyword.');return;}const id=name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');const badgeCcls={'badge-custom':'cc-green','badge-blur':'cc-purple','badge-audio':'cc-amber','badge-recorded':'cc-red','badge-network':'cc-cyan','badge-login':'cc-blue','badge-payment':'cc-orange','badge-negative':'cc-slate'};CATEGORIES.push({id,name,badge,ccls:badgeCcls[badge]||'cc-green',keywords:[...newCatKws]});clearNewCat();renderConfigCards();populateIssueFilter();alert(`Category "${name}" added! Click Re-analyze to apply.`);}
+function addCustomCategory(){const name=document.getElementById('newCatName').value.trim();const badge=document.getElementById('newCatColor').value;if(!name||!newCatKws.length){alert('Please add a name and at least one keyword.');return;}const id=name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');const badgeCcls={'badge-custom':'cc-green','badge-blur':'cc-purple','badge-audio':'cc-amber','badge-recorded':'cc-red','badge-network':'cc-cyan','badge-login':'cc-blue','badge-payment':'cc-orange','badge-negative':'cc-slate','badge-paidwait':'cc-teal'};CATEGORIES.push({id,name,badge,ccls:badgeCcls[badge]||'cc-green',keywords:[...newCatKws]});clearNewCat();renderConfigCards();populateIssueFilter();alert(`Category "${name}" added! Click Re-analyze to apply.`);}
 function clearNewCat(){document.getElementById('newCatName').value='';newCatKws=[];renderNewTags();}
 // Re-run issue detection with the current category config.
 // BUGFIX: previously ran on allChats (spam INCLUDED) and never refreshed the stat cards,
