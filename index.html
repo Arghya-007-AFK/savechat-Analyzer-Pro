@@ -224,8 +224,9 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
 .cc-fuchsia .cat-name{color:#e879f9;}.cc-fuchsia .cat-num{color:#e879f9;}.cc-fuchsia .cat-bar-fill,.cc-fuchsia::after{background:#d946ef;}
 .badge-cert{background:rgba(132,204,22,0.1);color:#bef264;border:1px solid rgba(132,204,22,0.2);}.badge-cert::before{background:#84cc16;}
 .cc-lime .cat-name{color:#a3e635;}.cc-lime .cat-num{color:#a3e635;}.cc-lime .cat-bar-fill,.cc-lime::after{background:#84cc16;}
-.badge-negative{background:rgba(236,72,153,0.1);color:#f9a8d4;border:1px solid rgba(236,72,153,0.22);}.badge-negative::before{background:#ec4899;}
-.cc-pink .cat-name{color:#f472b6;}.cc-pink .cat-num{color:#f472b6;}.cc-pink .cat-bar-fill,.cc-pink::after{background:#ec4899;}
+/* Negative / Bad — darkest red, strongest signal */
+.badge-negative{background:rgba(220,38,38,0.16);color:#fca5a5;border:1px solid rgba(220,38,38,0.4);}.badge-negative::before{background:#dc2626;}
+.cc-slate .cat-name{color:#f87171;}.cc-slate .cat-num{color:#f87171;}.cc-slate .cat-bar-fill,.cc-slate::after{background:#dc2626;}
 
 /* HANDLER CHIP */
 .handler-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.22);border-radius:6px;padding:3px 9px;font-size:12px;color:#a5b4fc;font-weight:600;}
@@ -307,7 +308,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
   </div>
   <div class="header-right">
     <div class="hdr-status"><span class="status-dot"></span><span id="hdrStatus">Ready</span></div>
-    <div class="hdr-pill">v2.1</div>
+    <div class="hdr-pill">v2.2</div>
   </div>
 </header>
 
@@ -551,6 +552,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
           <option value="badge-audio">Amber</option><option value="badge-recorded">Red</option>
           <option value="badge-network">Cyan</option><option value="badge-login">Blue</option>
           <option value="badge-payment">Orange</option>
+          <option value="badge-negative">Negative (Dark Red)</option>
         </select>
       </div>
     </div>
@@ -857,75 +859,223 @@ let CATEGORIES=[
      /\b(will|can|could)\s+(you|we|i)\s+promot/i
    ]},
 
-  // ─── Negative / Bad ───────────────────────────────────────────────────────
-  // Catch-all for negative sentiment: fraud / scam accusations, abuse & gaali
-  // (English + Hinglish), frustration, "waste of time", strong dissatisfaction,
-  // refund-demand anger. Deliberately the LAST built-in category: detectIssues()
-  // stops at the first matching category, so every message already claimed by
-  // another category keeps its original slug — this one only takes the rest.
-  // Generic words like bare 'bad' / 'poor' / 'damn' are NOT used (they flag
-  // "voice is poor", "video quality bad", "damn this is fantastic").
-  {id:'negative',name:'Negative / Bad',badge:'badge-negative',ccls:'cc-pink',
+  // ─── Negative / Bad ─────────────────────────────────────────────────────────
+  // Frustration, abuse / gaali / slang (any language), fraud-scam accusations,
+  // dismissive & dissatisfied remarks, being-ignored complaints, overpriced complaints.
+  //
+  // PLACED LAST ON PURPOSE: detectIssues() stops at the first matching category
+  // (break), so a message already captured by a real issue slug (Payment, Audio,
+  // Promotion, Recorded, …) KEEPS that slug. Only genuinely negative messages NOT
+  // already flagged fall here. Nothing is repositioned out of its existing category.
+  //
+  // Non-ASCII keywords (Devanagari, Tamil, Telugu, Kannada, Malayalam, Bengali,
+  // Gujarati, Gurmukhi, Urdu, emoji) work because kwMatch() bounds them with
+  // Unicode letter/number lookups instead of ASCII-only \b.
+  {id:'negative',name:'Negative / Bad',badge:'badge-negative',ccls:'cc-slate',
+   desc:'frustration · abuse / gaali / slang (any language) · fraud / scam · dissatisfaction · ignored · overpriced',
    keywords:[
-     // fraud / scam / cheating / lying
-     'fraud','frauds','fraudster','fraudsters','fraudulent','frod','scam','scams','scammed','scamming',
-     'scammer','scammers','scamstar','cheat','cheats','cheated','cheating','cheater','cheaters',
-     'fake','fake promise','fake promises','misleading','mislead','misled','misguiding',
-     'false commitment','false commitments','false promise','false promises','false claim','false claims',
-     'false advertisement','lies','liar','liars','lying','jhooth','jhoot','jhuth','jhutha','jhoota',
-     'dhoka','dhokha','dhokebaaz','dhokebaz','loot','looting','looted','lootera','lootere','thug','thugs',
-     'chor hai','chorr','gimmick','gimmicks','trap us','trapping us','blackmail','ponzi',
-     'fool','fools','fooling','making fool','bewakoof','bewakuf','ullu',
-     'dont buy','don\'t buy','do not buy','dont join','don\'t join','do not join','beware','stay away',
-     // legal / reporting threats
-     'consumer court','consumer forum','cyber crime','cybercrime','cyber cell','legal action','legal notice',
-     'police complaint','call the police','go to police','file a complaint','file complaint',
-     'raise a complaint','lodge a complaint','complain against',
-     // abuse / profanity / gaali — English
-     'fuck','fucking','fucked','fucker','motherfucker','fck','fuk','asshole','bastard','bitch',
-     'shit','shitty','bullshit','crap','crappy','piss off','screw you','shut up','shutup','stfu','gtfo',
-     'idiot','idiots','stupid','dumb','moron','morons','nonsense','non sense','nonsence','rubbish',
-     'garbage','trash','wtf','wth','what the hell','what the heck','what the f',
-     // abuse / profanity / gaali — Hinglish
-     'chutiya','chutiye','chutiyo','chutiyapa','chutiyapanti','chutia','chitiya','chituyo',
-     'madarchod','madrchod','bhenchod','behenchod','bhen chod','behen chod','benchod','bhosdike','bhosdi',
-     'bhosda','bhosad','bsdk','bkl','bkc','mkc','bc','mc','gandu','gaandu','lund','lauda','lawda',
-     'chudwa','chudwana','ma chud','maa chud','teri maa','teri ma','randi','harami','haramkhor',
-     'haramzada','haramzade','kamina','kamine','kamini','kutta','kutte','kuttey','kutti','saala','saale',
-     'bakchod','bakchodi','gaali','abe chup','chup kar','chup raho','chup ho ja','chup baith',
-     // contempt / disgust / insults
-     'pathetic','ridiculous','horrible','terrible','awful','disgusting','shameless','shame on you',
-     'ghatiya','third class','thirdclass','bogus','bakwas','bakwaas','bekar','faltu','overrated','overhyped',
-     'unprofessional','disrespectful','insulting','rude','kya drama','nautanki','tamasha',
-     // worst / useless / waste
-     'worst','useless','pointless','meaningless','waste','wasted','wasting','waste of time','time waste',
-     'timewaste','time wasted','timepass','time pass','not worth','no value','zero value','nothing useful',
-     'not useful','not helpful','of no use','no use',
-     // frustration / emotion
-     'boring','bored','irritating','irritated','irritate','annoying','annoyed','frustrating','frustrated',
-     'frustration','disappointed','disappointing','disappointment','dissatisfied','unsatisfied',
-     'not satisfied','not happy','unhappy','let down','regret','hate','hated','sucks','sucked','lame',
-     'headache','pak gaya','pak gayi','dimag kharab','dimag mat khao','bore ho','bore kar',
-     // session-level complaints
-     'poor session','bad session','bad webinar','poor webinar','bad workshop','poor workshop',
-     'bad experience','poor experience','enough with','enough of it','thats enough','that\'s enough',
-     'overdoing','over doing','over selling','overselling','stop it','stop this','stop talking',
-     'stop yelling','stop shouting','stop saying',
-     // refund-demand anger
-     'give me my money back','give my money back','return my money','want my money back'
+     // ══ ENGLISH profanity / abuse (incl. Indian no-apostrophe typing) ══
+     'fuck','fucking','fuckin','fucked','fck','fuk','fuking','fucker','fuckers','motherfucker','matafaka','motherfaka','madafaka','mofo','mf',
+     'bullshit','bull shit','what the shit','shit','shitty','crap','crappy','damn it','dammit','damn you','damn this',
+     'bastard','bastards','asshole','ass hole','assholes','bitch','bitches','dick','dickhead','prick','jerk','jerks','wanker','twat','cunt','slut','whore',
+     'screw you','screw this','piss off','pissed','pissed off','wtf','wth','what the f','stfu','gtfo','shut up','shut your','shutup','get lost','go to hell','what the hell','the hell is this','hell no',
+     'idiot','idiots','idiotic','moron','morons','stupid','dumb','dumbass','dumb ass','loser','losers','fool','fools','foolish','bloody fool','bloody idiot','bloody fellow','bloody sell','bloody hell','bloody waste',
+     'retard','retarded','mental','psycho','clown','clowns','joker','jokers','chapri','chapris',
+     'useless fellow','waste fellow','waste body','waste of space',
+     // ══ HINDI / URDU / HINGLISH gaali & abuse ══
+     'bsdk','bkl','bhenchod','behenchod','bhen chod','behen chod','bhencho','bhenchodd','madarchod','madrchod','maderchod','madar chod','mader chod','madarjaat',
+     'bhosdi','bhosdike','bhosadi','bhosadike','bhosdiwale','bhosdiwala','bhosda','bhosdk',
+     'gandu','gaandu','gaand','gaand mar','gand mara','gand marao','chodu','chod de','chutiya','chutiye','chutia','chutiyo','chutiyon','chutya','chutiyapa','chutiyapanti','chutiye ho',
+     'harami','haraami','haramkhor','haramzada','haramzade','haramzadi','kamina','kameena','kamine','kameene','kutta','kutte','kuttey','kutiya','kuttiya','suar','sooar','suwar',
+     'randi','randwa','saala','saale','saali','sala','sali','bakchod','bakchodi','lavde','lavda','lode','lauda','lund','jhant','jhaant','jhantu','jhandu','tatti','gobar',
+     'bhadwa','bhadwe','bhikari','bhikhari','e-bhikari','ebhikari','bhikaari','feku','budbak','nalayak','nikamma','nikkamma','gawar','ganwar','jahil','jaahil','badtameez','badtamiz','besharam','besharm','behuda',
+     'bewakoof','bevkoof','bewkoof','bewakuf','bevkuf','murkh','moorkh','gadha','gadhe','gadhi','ullu','ullu ka','ullu bana','paagal','pagal hai','pagal ho kya','pagal samjha','pagal samjh','pagal bana','pagal mat','pagal log','pagal company',
+     'teri maa','teri ma ki','teri maa ki','teri behen','teri bhen','tumhari maa','tumhari ma','bhaad me','bhaad mein','bhad me jao','bhad mein jao','bhaad mai',
+     // ══ PUNJABI ══
+     'pencho','penchod','pen di','pehn di','bhen di','behn di','maa di','kanjar','kanjra','kanjri','khotta','khote','khotte','ullu da pattha','ullu da patha','fittey muh','fitte muh','fitteh muh','lulli',
+     // ══ MARATHI ══
+     'jhavadya','zavadya','zhavadya','zavnya','jhavnya','bhikarchot','bhikar chot','aaichi gand','aichya gavat','gadhav','gadhva','bawlat','bawlt','randichya','bhikarda','faltugiri','phaltu','halkat',
+     // ══ GUJARATI ══
+     'gando','gaando','gandi','chutiyo','nakamo','nakami','dobo','dobi','mathu kharab',
+     // ══ BENGALI ══
+     'bokachoda','bokachod','boka choda','bokachuda','khanki','khankir','khankir chele','magir','shuorer','shuorer bachcha','kuttar bachcha','kuttar baccha','chodna','chudna','chudir','bodmash','badmash','shala',
+     // ══ TAMIL ══
+     'punda','pundai','pundaa','punde','otha','othaa','thevidiya','thevdiya','thevidiyaa','koothi','kuthi','mayiru','mayir','myir','myiru','poolu','poola','baadu','loosu','loosu paiya',
+     'naaye','thendi','thendi paiya','mokka','mokkai','mokka piece','bore adikuthu','bore adikudhu','soothu','sootha','poda','podi','poda patti','podi patti','poda thendi','kena','kenai','kenapaiya',
+     // ══ TELUGU ══
+     'dengey','dengay','denge','dengu','dengina','lanja','lanjakodaka','lanja kodaka','pooku','puku','modda','gudda','pichoda','pichhoda','pichi pooku','erri','erripuka','erripooka','erri pooka','erri puku',
+     'sanka naaki','sankanaaki','dobbu','thikka','yedava','yedhava','edava','kukka','gadida','nee amma',
+     // ══ KANNADA ══
+     'bolimaga','boli maga','bolimagane','sule','sulemaga','sule maga','sulemagane','tunne','thunne','tullu','thullu','huchcha','hucha','huccha','bevarsi','bewarsi','naaymakkale','nin amma','ninna amma',
+     // ══ MALAYALAM ══
+     'myru','myre','maire','mairu','maire','thayoli','thayolli','kunna','kunne','pooru','nayinte','nayinte mon','nayinte mone','pottan','potti','mandan','kazhuveri','kazhuvery',
+     // ══ NEPALI / BHOJPURI / OTHERS ══
+     'muji','machikne','machikney','gu kha','gu khaane','randi ko','bhalu',
+     // ══ OTHER LANGUAGES (international slang / fraud) ══
+     'estafa','fraude','mierda','puta','idiota','basura','merde','putain','scheisse','scheiße','arschloch','betrug','penipu','penipuan','bangsat','bodoh',
+     '骗子','诈骗','垃圾','傻逼','他妈的','мошенник','обман','дурак','идиот','говно','сука','نصب','احتيال','غبي',
+     // ══ NATIVE SCRIPT — Hindi / Marathi / Bhojpuri (Devanagari) ══
+     'चूतिया','चुतिया','चूतिये','भोसड़ी','भोसडी','भोसड़ीके','मादरचोद','बहनचोद','भेनचोद','गांडू','गांड','लौड़ा','लंड','रंडी','हरामी','हरामखोर','कमीना','कमीने','कुत्ता','कुत्ते','कुतिया','साला','साले','सुअर',
+     'बकवास','बेकार','फालतू','घटिया','वाहियात','झूठ','झूठा','झूठे','झूठी','धोखा','धोखेबाज','चोर','चोरी','लूट','लूटना','ठग','ठगी','फ्रॉड','फ्राड','स्कैम','स्कैमर','बकचोदी','बेवकूफ','बेवक़ूफ़','पागल','उल्लू','गधा','गधे','मूर्ख',
+     'टाइम वेस्ट','टाइम पास','टाइमपास','समय बर्बाद','पैसा बर्बाद','पैसे बर्बाद','पैसे वापस','पैसा वापस','बंद करो','बस करो','चुप','भिखारी','नौटंकी','नाटक','तमाशा','बहुत हो गया','जाहिल','गंवार','बदतमीज','नालायक','निकम्मा','तेरी माँ','तेरी मां','भाड़ में','भाड़ मे',
+     'झवाड्या','भिकारचोट','गाढव','बावळट','चुत्या','रांडेच्या','फसवणूक','लबाड',
+     // ══ NATIVE SCRIPT — Bengali ══
+     'বোকাচোদা','খানকি','শালা','শুয়োর','কুত্তা','বাজে','ফালতু','চোর','ঠগ','ধোঁকা','মিথ্যা','প্রতারণা','জালিয়াতি',
+     // ══ NATIVE SCRIPT — Tamil ══
+     'புண்ட','புண்டை','ஓத்தா','தேவடியா','கூதி','சுன்னி','மயிர்','பூலு','லூசு','மொக்கை','வேஸ்ட்','நாயே','தேண்டி','போடா','போடி','மோசடி','ஏமாற்று','திருடன்',
+     // ══ NATIVE SCRIPT — Telugu ══
+     'దెంగెయ్','లంజ','లంజకొడక','పూకు','మొడ్డ','గుద్ద','పిచ్చోడ','ఎర్రి','ఎర్రిపూక','కుక్క','గాడిద','వేస్ట్','దొబ్బు','మోసం','దొంగ','మోసగాడు',
+     // ══ NATIVE SCRIPT — Kannada ══
+     'ಬೋಳಿ','ಬೋಳಿಮಗ','ಸೂಳೆ','ಸೂಳೆಮಗ','ತುಣ್ಣೆ','ತುಲ್ಲು','ಹುಚ್ಚ','ಬೇವರ್ಸಿ','ನಾಯಿ','ಕತ್ತೆ','ಮೋಸ','ಕಳ್ಳ','ವೇಸ್ಟ್',
+     // ══ NATIVE SCRIPT — Malayalam ══
+     'മൈര്','മൈരേ','തായോളി','കുണ്ണ','പൂറ്','പട്ടി','പോടാ','പോടി','പൊട്ടൻ','മണ്ടൻ','തെണ്ടി','നായിന്റെ മോൻ','കള്ളൻ','തട്ടിപ്പ്','വേസ്റ്റ്',
+     // ══ NATIVE SCRIPT — Gujarati ══
+     'ગાંડો','ગાંડી','બકવાસ','ચોર','ફાલતુ','નકામો','ધોખો','છેતરપિંડી','લૂંટ','ઠગ',
+     // ══ NATIVE SCRIPT — Punjabi (Gurmukhi) ══
+     'ਭੈਣਚੋਦ','ਮਾਦਰਚੋਦ','ਕੰਜਰ','ਖੋਤਾ','ਕੁੱਤਾ','ਬਕਵਾਸ','ਚੋਰ','ਠੱਗ','ਧੋਖਾ','ਝੂਠ','ਫਿੱਟੇ ਮੂੰਹ',
+     // ══ NATIVE SCRIPT — Urdu ══
+     'حرامی','کمینے','بکواس','چور','فراڈ','دھوکہ','جھوٹ','بے وقوف','پاگل','گدھا','کتا','بھینچود','مادرچود','چوتیا','گانڈو',
+     // ══ EMOJI — explicit negative reactions ══
+     '👎','🖕','💩','🤬','😡','😠','😤','🙄','😒',
+     // ══ FRAUD / SCAM / CHEATING accusations (English + Hinglish) ══
+     'fraud','frauds','froud','frod','fruad','fraudster','fraudulent','scam','scams','scammer','scammers','scamming','scammed','scammy','hoax','ponzi','pyramid scheme','mlm','network marketing','network marketing session',
+     'cheat','cheats','cheater','cheaters','cheating','cheated','fake','fakes','faker','fakers','phony','phoney','liar','liars','lying','lied','lies','misleading','mislead','misled','misguiding','misguided','deceive','deceiving','deceived','deception','betray','betrayed',
+     'trap','trapped','trapping','rip off','ripoff','rip-off','ripped off','robbery','daylight robbery','robbing','robbed','thief','thieves','steal','stealing','stolen','looting','looted','loot','lootne','looters','loot liya','lut liya','lut gaya','lut gaye','loot rahe',
+     'conman','con man','con artist','conning','gimmick','gimmicks','clickbait','click bait','so called','so-called','false promise','false promises','fake promise','fake promises','jhoota wada','jhoothe wade','jhoote wade',
+     'thag','thagi','thug','thugs','thagna','420','chor','chori','chors','chor hai','chor company','chor log','dhokha','dhoka','dhokebaaz','dhokhebaaz','dhokhebaz','dhoke','dhokha de','dhokha diya','dhoka diya',
+     'jhoot','jhooth','jhut','jhuth','jhuthe','jhootha','jhoota','jhutha','jhuta','jhooth bol','jhoot bol','jhut bol','sab jhoot','sab jhut','jhoothe log','gumrah',
+     'paisa kha','paise kha','paise khane','paisa khane','paise loot','paisa loot','paise lootne','paisa lootne','sirf paisa','sirf paise','bas paisa','bas paise','only paisa','paise ke liye','paiso ke liye','dhandha','dhanda',
+     'burnt my finger','burnt ny finger','burnt our finger','burned my finger','not provided','havenoty responded','not fulfilled','never delivered','didnt deliver',"didn't deliver",'commitment not','promised but','promised earlier','earlier said','earlier promised',
+     'you told it is free','you told free','you said free','you said it is free','told it was free','said it was free','said it is free','told free','bola tha free','free bola tha','free bola','free kaha tha','free bataya','free bolke','free bol ke',
+     'not safe','unsafe','not secure','insecure','hacked','got hacked','bypassed','by passed','bypass kar',
+     // ══ FRUSTRATION / DISMISSIVE / DISSATISFACTION (English) ══
+     'waste','wasted','wasting','waste of time','waste of my time','waste of our time','wasted time','wasting time','wasting our','wasting everyone','wasted an hour','wasting people','time waste','timewaste','timepass','time pass','waste of money',
+     'horrible','pathetic','ridiculous','disgusting','disgusted','rubbish','garbage','trash','nonsense','useless','worthless','hopeless','worst','worst ever','terrible','awful','lousy','lame','cringe','cringey','cringy','sucks','suck','sucked',
+     'disappointing','disappointed','disappointment','frustrated','frustrating','frustration','fed up','fedup','irritating','irritated','irritate','annoying','annoyed','annoy','regret','regretting','unprofessional','unethical','shameful','shameless','shame on','disgrace','disgraceful',
+     'boring','bored','bore','so boring','very boring','too boring','boring session','timepass session','not worth','not worth it','no value','zero value','nothing useful','not useful','not helpful','no use','of no use','learnt nothing','learned nothing','learn nothing','didnt learn',"didn't learn",'dint learn','not learning anything',
+     'very bad','so bad','bad experience','worst experience','bad session','bad webinar','bad workshop','bad company','bad service','bad teaching','bad teacher','bad trainer','bad host','bad content','bad attitude','bad behaviour','bad behavior','bad people','bad guys','not good','no good','not nice','not at all good','not good at all',
+     'very poor','so poor','too poor','poor session','poor content','poor teaching','poor explanation','poor experience','poor service','third class','3rd class','low class','cheap tricks','cheap trick','cheap tactics','cheap tactic','cheap marketing','cheap gimmick','cheap stunt','cheap company','cheap people','cheap behaviour','cheap behavior',
+     'not interested','not intrested','not intersted','not intrstd','unsubscribe','unfollow','i am leaving','im leaving',"i'm leaving",'i m leaving','leaving now','leaving this','leaving the session','leaving the webinar','now leaving','logging off','logging out',
+     'roadside','tele vala','telivala','teli vala','ye lelo','yeh lelo','vo lelo','wo lelo','sell outs','sellout','sellouts','sell out','salesman','salesmen','just selling','only selling','only sell','just sell',
+     'shouting','screaming','yelling','chilla','chillao','chillana','chillate','chilla mat','mat chillao','itna chillate','kyu chilla','awaaz neeche','awaz neeche','awaj neeche',
+     'again and again','baar baar','bar bar','kitni baar','kitni bar','kitni bar bologe','wahi baat','wohi baat','vahi baat','ek hi baat','ek hi cheez','same thing again','repeating the same','repeating same','keep repeating','keeps repeating','stop repeating',
+     'spamming','stop spamming','stop messaging','stop msg','stop mgs','stop calling','dont call','don\'t call','do not call','stop sending','stop texting','harass','harassing','harassment','harassed','pestering','bothering','disturbing','nagging',
+     'report you','report this','reporting this','reporting you','report karunga','report krunga','report kar dunga','cyber crime','cybercrime','cyber cell','consumer court','consumer forum','legal action','police complaint','lodge a complaint','file a complaint','file complaint','complaint against','complaint karunga','complaint krunga',
+     'sue you','sue them','sue this','expose you','expose this','expose them','will expose','exposed you','expose karunga','expose krunga',
+     'money back','give my money','give me my money','return my money','want my money','paisa wapas','paise wapas','paisa vapas','paise vapas','paisa lautao','paise lautao','paisa wapis','paise wapis','paisa barbad','paise barbad','time barbad','barbad','barbaad',
+     'too expensive','very expensive','so expensive','too costly','very costly','so costly','overpriced','over priced','price too high','price is too high','too high price','bahut mehenga','bahut mehnga','bohot mehenga','bohot mehnga','bhut mehenga','bhut mehnga','itna mehenga','itna mehnga','mehenga hai','mehnga hai','mahenga hai','mahnga hai','kitna mehenga','zyada mehenga','jyada mehenga',
+     // ══ FRUSTRATION / DISMISSIVE (Hinglish) ══
+     'bakwas','bakwaas','bakvas','bkwas','bkws','bakwash','bekar','bekaar','bakar','faltu','faaltu','fultu','ghatiya','ghatia','ghtiya','wahiyat','vahiyat','sasta','chindi','pakau','pakao','pakaya','pakate','mat pakao','kitna pakaoge',
+     'bakwas session','bekar session','faltu session','bakwas hai','bekar hai','faltu hai','ghatiya hai','kuch nahi sikhaya','kuch nhi sikhaya','kuch nahi sikha','kuch nhi sikha','kuch bhi nahi','kuch bhi nhi','kuch bhi nahi sikhaya','kuch nahi milega','kuch nhi milega','ghanta kuch',
+     'nautanki','natak','tamasha','drama kar','drama mat','drama hai','kya drama','itna drama','bahut drama','bhashan','bhasan','bhaashan','bhashan mat','bhashan band','gyan mat','gyaan mat','gyan de raha','gyaan de raha','itna gyan','itna gyaan','lecture mat','stop lecturing','stop the lecture',
+     'bore ho','bor ho','bore ho gaya','bor ho gaya','bore ho gya','bore ho raha','bore kar','neend aa rahi','neend aa rhi','neend aati','sleep aa rahi',
+     'gussa','gusse','naraz','naaraz','naraaz','pareshan','paresan','pareshaan','tang aa','tang aagaya','tang aa gaya','thak gaya','thak gaye','thak gayi','thak gya','dimag kharab','dimaag kharab','dimag mat','dimaag mat','sar mat kha','sir mat kha','bheja fry','bheja mat',
+     'chup','chup kar','chup ho','chup raho','chup rahiye','band kar','band karo','band kro','bandh karo','bandh kar','bas kar','bas karo','bas kro','bas bhi karo','bahut ho gaya','bohot ho gaya','bhut ho gaya','bahot ho gaya','bahut hua','bohot hua','ho gaya bas','bakwas band',
+     'nikal lo','nikal jao','bhag jao','bhaag jao','ghanta kuch','ja rahe hain','mai ja raha','main ja raha','me ja raha','mai ja rahi','main ja rahi',
+     // ══ IMPATIENCE — "stop / enough / get to the point / end it" ══
+     'enough','enough now','enough sir','enough is enough','had enough','enough of this',
+     'stop it','stop this','stop now','stop sir','please stop','pls stop','plz stop','stop please','stop pls','stop plz','just stop','stop already','stop stop','stop asking','stop bugging','stop forcing','stop pushing',
+     'get to the point','come to the point','come to point','get on with it','move on already','move on now','move forward now','point pe aao','point pe aa','mudde pe aao','mudde par aao','matlab ki baat','kaam ki baat','kaam ki baat karo','faltu baat','faltu ki baat',
+     'kab khatam','kb khatam','kab khatm','kb khatm','kab khatam hoga','khatam karo','khatm karo','khatam kro','khatam karo yaar','jaldi khatam','jaldi khatm','jaldi karo','jaldi kro','jaldi finish','jaldi end','jaldi over','over karo','end karo','finish karo',
+     'wind up','wrap it up','close the session','end the session','end this session','finish the session','session khatam karo','lets close','let\'s close',
+     'this is very basic','very basic','too basic','so basic','nothing new','already know this','already knew this','everyone knows this','available on youtube','free on youtube','youtube pe free','sab youtube pe','youtube se seekh','youtube pe hai','google kar lo','google it',
+     // ══ IGNORED / NOT ANSWERED ══
+     'no reply','no response','not responding','not replying','not answering','nobody replying','no one replying','no one is replying','no one is responding','nobody is responding','unanswered','ignoring','ignored','being ignored','ignore kar','ignore kr',
+     'reply nahi','reply nhi','jawab nahi','jawab nhi','jawab do','koi reply','koi jawab','why no reply','why not replying','reply kyu nahi','reply kyu nhi','koi sun raha','koi sunta','koi dekh raha'
    ],
+   // Raw regex patterns — catch obfuscated / masked abuse that literal keywords miss:
+   //   f**k, f***ing, s**t, b***h, ch**iya, b.c, m.c, f u c k, fuuuck, standalone "bc"/"mc" (not "because")
+   patterns:[
+     /\bf[\*#@$%!_\-\.]{1,4}k(?:ing|ed|er|s)?\b/i,            // f**k / f***ing
+     /\bf[\*#@$%!]{2,4}(?!\w)/i,                               // f*** (fully masked)
+     /\bf[\*#@$%!_\-\.]{2,6}(?:ing|ed|er)\b/i,                // f*****ing
+     /\bfu+c+k+/i,                                             // fuuuck
+     /\bf\s+u\s+c\s+k\b/i,                                     // f u c k
+     /\bs[\*#@$%!_\-]{1,3}t\b/i,                               // s**t
+     /\bb[\*#@$%!_\-]{1,5}h\b/i,                               // b***h
+     /\bch[\*#@$%!_\-]{2,6}a\b/i,                              // ch***a / ch**iya
+     /\bm[\*#@$%!_\-]{2,8}(?:d|od)\b/i,                        // m******d
+     /\b(?:bh|b)[\*#@$%!_\-]{2,8}(?:d|k|ke)\b/i,               // bh****ke / b***k
+     /\b[bm]\.c\b/i,                                           // b.c / m.c
+     /\b(?:bc|mc)\b(?!\s+(?:i|we|he|she|they|it|my|the|a|an|of|you|u|there|this|that|its|it's|im|i'm|he's|she's|they're|we're|not|no)\b)/i, // bc/mc as gaali, not "because"
+     /(?:^|\s)(?:stop|enough|bas|chup|band karo|bakwas|bekar|faltu|nikal|bhaag|bhag|nonsense|rubbish|useless|waste|wasted|worst|boring|fraud|scam|fake)[\s!.…]*$/i // one-word dismissive message
+   ],
+   // Exclusions — benign constructions that contain a negative-looking word.
+   // exclMode:'strip' → the benign phrase is REMOVED from the message and the keywords are
+   // re-tested on what remains (unlike other categories, where excl vetoes the whole message).
+   // So "how to detect fraud" → nothing left → not flagged; "damn it's crazy, this is a scam"
+   // → "damn it's" removed → "scam" still fires. No bypass list needed.
    excl:[
-     // short age + profession intro lines ("36 - ERP BC Developer")
-     /^(?=.{0,60}$)\s*(1[89]|[2-6]\d)\b[\s\-\u2013:,.)]/,
-     // negated / positive uses: "not boring", "no waste", "isn't fake" ...
-     /\b(not|no|never|isn.?t|wasn.?t|nothing|neither)\s+(a\s+|an\s+|so\s+|that\s+|very\s+|too\s+|really\s+)?(boring|bored|waste|wasted|fake|fraud|scam|cheat\w*|useless|worst|trash|pathetic|bad|dumb|stupid|irritating|annoying|disappoint\w*|frustrat\w*|misleading|lame|pointless|crap|rubbish|terrible|horrible|awful|disgusting|garbage|nonsense)\b/i,
-     // topical (not accusatory) use of "fake": fake reviews / fake videos / ...
-     /\bfake\s+(marketing|customers?|reviews?|ugc|news|videos?|images?|photos?|accounts?|profiles?|ads?|content|data|people|faces?|voices?)\b/i,
-     // waste management / waste water ...
-     /\bwaste\s+(management|water|material|paper|food|plastic|collection|disposal|recycl\w*)\b/i
+     // negated waste: "don't waste", "not a waste", "no time pass", "won't waste"
+     /\b(don.?t|dont|do not|never|won.?t|wont|not|no|isn.?t|isnt|wasn.?t|wasnt|without|instead of)\s+(a\s+|the\s+|any\s+|your\s+|ur\s+|my\s+|our\s+)?(wast\w*|time ?pass|timepass)\b/i,
+     // professional / topic context: "fraud analyst", "detect fraud", "fraud detection model"
+     /\bfraud\s+(detection|analyst|analysis|analytics|prevention|investigation|investigator|risk|management|team|dept|department|cases?|model|ml|ai|domain|sector)\b/i,
+     /\b(detect|detecting|prevent|preventing|identify|identifying|avoid|avoiding|catch|catching|analy[sz]e|analy[sz]ing|investigate|fight|stop)\w*\s+(the\s+|a\s+|online\s+|such\s+)?(fraud|frauds|scam|scams|fake|fakes|scammers|fraudsters)\b/i,
+     // AI-topic "fake": deepfake, fake video/image generation questions
+     /\b(deep ?fakes?|fake\s+(video|videos|image|images|photo|photos|voice|audio|news|account|accounts|profile|profiles|id|ids|review|reviews|content)|(generate|generating|create|creating|make|making|bana|banana|banaye|banao|banaya|detect|identify)\w*\s+(a\s+|the\s+|such\s+)?fake)\b/i,
+     // cheat sheet / cheat codes
+     /\bcheat\s*(sheet|sheets|code|codes)\b/i,
+     // self-deprecating "dumb question" / "stupid doubt" / "basic question"
+     /\b(dumb|stupid|silly|basic|noob|dumb\s+ass)\s+(question|questions|doubt|doubts|query|q|one)\b/i,
+     // swearing used as praise / amazement
+     /\bholy (shit|crap|fuck|hell)\b/i,
+     /\b(damn|fucking|fuckin|freaking|bloody|insanely|crazy|so|very|really)\s+(good|great|amazing|awesome|nice|cool|brilliant|useful|helpful|impressive|excellent|fantastic|superb|incredible|love|loved|beautiful|interesting)\b/i,
+     /\b(hell|heck)\s+(of|lot|lotta|yeah|yes)\b/i,
+     // data-science idiom
+     /\bgarbage in,?\s*garbage out\b|\bgarbage in\b/i,
+     // "enough" as sufficiency, not as "stop": "is it enough", "good enough", "enough time", "fair enough"
+     /\b(is|are|was|were|not|isn.?t|good|fair|have|has|had|will be|would be|just|more than|sufficient|one|two|single|it|its|it.?s|this|that|that.?s|thats|this is|be|enough is)\s+enough\b/i,
+     /\benough\s+(time|for|to|money|data|info|information|knowledge|of|credits?|free|storage|space|resources|tools|context|rows|tokens|examples)\b/i,
+     // "stop" as a neutral instruction / question, not a complaint: "stop sharing?", "how to stop", "stop recording"
+     /\b(how to|how do i|can i|can we|should i|to)\s+stop\b/i,
+     /\bstop\s+(sharing|recording|the recording|screen|share|button|timer|loop|automation|process|the process|generating|generation|it from|words?|word)\b/i,
+     // Hinglish "loot lo" = grab the deal (positive), "chor do / chod do" = leave it (not thief)
+     /\bloot\s+(lo|le|lena|lelo|machi|mach|machi hai|mach gayi)\b/i,
+     /\bchor\s+(do|de|dijiye|dena|diya|diye|dijiyega|ke|kar|k|dete|deta|dijiyee|den)\b/i,
+     // "worst case" / "not bad" / "my bad"
+     /\bworst[\s-]case\b/i,
+     /\b(not|no|never)\s+(that\s+|so\s+|too\s+|very\s+)?bad\b/i,
+     /\bmy bad\b/i,
+     // "not good at X" = own skill, not a complaint
+     /\bnot good (at|in|with)\b/i,
+     // mental health / mental model topic
+     /\bmental (health|wellbeing|well-being|illness|model|models|math|peace|stress|clarity|fitness|note|notes)\b/i,
+     // finance-topic traps
+     /\b(debt|liquidity|poverty|middle.?class|income|value|growth) trap\b/i,
+     // "mlm" / "network marketing" as a profession intro or question, not an accusation
+     /\b(i am|i'm|im|working in|work in|from|into|in the)\s+(mlm|network marketing)\b/i,
+     /\b(ai|tools?|use|for)\s+(for|in)\s+(mlm|network marketing)\b/i,
+     // "bore" false friends: "borewell", "bore well"
+     /\bbore ?well\b/i,
+     // "shit" in "shitload of value"? (rare) keep; "sucks" fine.
+     // "trash" as a verb for files: "trash the file"
+     /\b(move to|empty|the)\s+trash\b/i,
+     // "steal" idiom: "steal the show", "steal this prompt"
+     /\bsteal (the show|this|these|those|that|my|your|his|her|their|ur)\b/i,
+     // "lies in / lie in" (the power lies in …)
+     /\b(lie|lies)\s+(in|with|on|ahead|here|there)\b/i,
+     // "no response" / "not responding" said about a TOOL during the demo ("chatgpt not responding"), not about the host
+     /\b(chatgpt|gemini|claude|notebooklm|julius|higgsfield|stitch|tool|app|website|site|server|page|bot|api|model|prompt)\s+.{0,25}\b(no response|not responding|not replying|not answering|ignoring)\b/i,
+     /\b(no response|not responding|not replying|not answering)\s+.{0,25}\b(chatgpt|gemini|claude|notebooklm|julius|higgsfield|stitch|tool|app|website|site|server|page|bot|api|model|from the tool)\b/i,
+     // waste as a topic / profession: "waste management", "e-waste", "food waste"
+     /\be-?waste\b|\bwaste\s+(management|water|disposal|recycl\w*|plastic|segregation|to energy|materials?|products?|collection)\b|\b(food|plastic|solid|medical|industrial|electronic|construction)\s+waste\b/i,
+     // own financial status ("i am very poor"), not a quality complaint
+     /\b(i am|i'm|im|we are|we're|my family is|family is|he is|she is|they are|parents are)\s+(very\s+|so\s+|too\s+)?poor\b/i,
+     // self-deprecating "i am stupid / dumb / an idiot"
+     /\b(i am|i'm|im|feel|feeling|am i|i was)\s+(so\s+|very\s+|such\s+)?(stupid|dumb|an idiot|idiot|a fool|foolish)\b/i,
+     // "the shit" = praise slang; "damn it's" = amazement, not "damn it"
+     /\b(is|are|was|were)\s+the\s+shit\b/i,
+     /\bdamn\s+it['’]s\b/i,
+     // "ignore" as a tool instruction, not being ignored
+     /\b(can|should|may|just|please|pls|plz|safely)\s+(be\s+)?ignore\w*\b|\bignore\s+(the|this|that|it|warning|warnings|error|errors|message|messages|popup|pop-up)\b/i,
+     // salesman / salesperson as own profession
+     /\b(i am|i'm|im|working as|work as|as a|i was)\s+(a\s+)?(salesman|salesperson|sales person)\b/i,
+     // "mf" = mutual fund when finance words are around
+     /\bmfs?\b(?=[\s\S]*\b(funds?|sips?|invest\w*|mutual|equity|portfolio|returns?|nifty|stocks?|market|elss|nav|schemes?)\b)|\b(funds?|sips?|invest\w*|mutual|equity|portfolio|returns?|nifty|stocks?|market|elss|nav|schemes?)\b[\s\S]*?\bmfs?\b/i,
+     // "420" as a number/price/time, not the IPC slang: "₹420", "420 rs", "4:20"
+     /(?:₹|rs\.?|inr|\$)\s*420\b|\b420\s*(rs|rupees|inr|\/-|per|pm|am)\b|\b4:20\b/i
    ],
-   // ...unless unmistakable abuse / fraud words are also present
-   exclBypass:[/\b(fuck\w*|chutiy\w*|madarchod|bhenchod|behenchod|bsdk|gandu|motherfucker|fraud\w*|scam\w*|cheat\w*)\b/i]},
+   exclMode:'strip'},
 ];
 
 function parseZoomChat(text){
@@ -953,20 +1103,93 @@ function parseZoomChat(text){
 function timeToSecs(t){const p=t.split(':').map(Number);return p[0]*3600+p[1]*60+(p[2]||0);}
 
 // Word-boundary keyword match — prevents "mic" matching "academic", "mute" matching "mimutes" etc.
+// • Compiled regexes are cached per keyword (was: new RegExp per message × keyword → seconds on 10k rows).
+// • JS \b only knows ASCII word chars, so Devanagari / Tamil / Telugu / emoji keywords would NEVER match
+//   with \b. Non-ASCII keywords are bounded by "not a letter/number" on either side instead (Unicode-aware).
+const _kwCache=new Map();
+// ── Per-category compiled keyword matcher ───────────────────────────────────
+// All of a category's keywords are compiled into ONE alternation regex
+//   ASCII keywords  → /\b(?:kw1|kw2|…)\b/i            (identical semantics to kwMatch per keyword)
+//   Non-ASCII ones  → /(?:^|[^\p{L}\p{N}_])(?:kw…)(?![\p{L}\p{N}_])/iu   (Devanagari, Tamil, emoji …)
+// so each message costs ~2 regex tests per category instead of one test per keyword
+// (10k rows × 1,700 keywords was ~16M tests ≈ 4-5 s; this brings it to ~0.2 s).
+// The cache key is the joined keyword list, so edits in the Config view rebuild it automatically.
+// Serialize a word list as a prefix-trie regex:  ['chor','chori','chup'] → "ch(?:or(?:i)?|up)"
+// A flat alternation (?:w1|w2|…|w1500) is tried alternative-by-alternative at every word start;
+// the trie shares prefixes so the engine fails after one mismatched character (≈10-20× faster).
+function trieRegexSource(words){
+  const root={};
+  for(const w of words){let n=root;for(const ch of w.toLowerCase()){n=n[ch]||(n[ch]={});}n['\u0000']=true;}
+  const escCh=ch=>ch.replace(/[.*+?^${}()|[\]\\\/\-]/g,'\\$&');
+  const ser=n=>{
+    const keys=Object.keys(n).filter(k=>k!=='\u0000').sort();
+    if(!keys.length) return '';
+    const alts=keys.map(k=>escCh(k)+ser(n[k]));
+    const body=alts.length===1?alts[0]:'(?:'+alts.join('|')+')';
+    return n['\u0000']?'(?:'+body+')?':body;
+  };
+  return ser(root);
+}
+const _catRxCache=new Map();
+// Build (or refresh after a Config edit) the compiled matcher for one category.
+// Called once per category per detectIssues() run — NOT per row: the cache key is the joined
+// keyword list (~15 KB for Negative/Bad), and rebuilding it per message was the real hot spot.
+function getCatMatcher(cat){
+  const key=cat.keywords.join('\u0001');
+  let c=_catRxCache.get(cat.id);
+  if(!c||c.key!==key){
+    const isAscii=k=>/^[\x00-\x7F]*$/.test(k);
+    const asc=cat.keywords.filter(isAscii);
+    const uniRaw=cat.keywords.filter(k=>!isAscii(k));
+    c={key,ascii:asc.length?new RegExp('\\b'+trieRegexSource(asc)+'\\b','i'):null,uni:null,uniFallback:null};
+    if(uniRaw.length){
+      try{ c.uni=new RegExp('(?:^|[^\\p{L}\\p{N}_])'+trieRegexSource(uniRaw)+'(?![\\p{L}\\p{N}_])','iu'); }
+      catch(e){ c.uniFallback=uniRaw.map(u=>u.toLowerCase()); } // very old browser: plain substring
+    }
+    _catRxCache.set(cat.id,c);
+  }
+  return c;
+}
+function catKeywordHit(cat,text){
+  const c=_catRxCache.get(cat.id)||getCatMatcher(cat);
+  if(c.ascii&&c.ascii.test(text)) return true;
+  // Unicode alternation is ~20× slower than \b in V8 — only run it when the message actually has non-ASCII chars
+  if((c.uni||c.uniFallback)&&/[^\x00-\x7F]/.test(text)){
+    if(c.uni&&c.uni.test(text)) return true;
+    if(c.uniFallback){const lo=text.toLowerCase();if(c.uniFallback.some(u=>lo.includes(u))) return true;}
+  }
+  return false;
+}
+// Global-flag clone of a pattern (cached) — String.replace needs /g to strip every occurrence
+const _gCache=new Map();
+function globalRx(p){let g=_gCache.get(p);if(!g){g=new RegExp(p.source,p.flags.includes('g')?p.flags:p.flags+'g');_gCache.set(p,g);}g.lastIndex=0;return g;}
 function kwMatch(chat,kw){
-  const esc=kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  return new RegExp('\\b'+esc+'\\b','i').test(chat);
+  let re=_kwCache.get(kw);
+  if(!re){
+    const esc=kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    if(/^[\x00-\x7F]*$/.test(kw)){
+      re=new RegExp('\\b'+esc+'\\b','i');
+    } else {
+      try{ re=new RegExp('(?:^|[^\\p{L}\\p{N}_])'+esc+'(?![\\p{L}\\p{N}_])','iu'); }
+      catch(e){ re={test:s=>s.toLowerCase().includes(kw.toLowerCase())}; } // very old browser fallback
+    }
+    _kwCache.set(kw,re);
+  }
+  return re.test(chat);
 }
 
 function detectIssues(rows){
   const issues=[];
+  CATEGORIES.forEach(getCatMatcher); // refresh compiled keyword matchers once (picks up Config edits)
   for(const row of rows){
     // Handler messages are NEVER issues — issues come only from attendees
     if(isHandler(row.admin)) continue;
     for(const cat of CATEGORIES){
 
-      // STEP 1 — keyword match (word-boundary)
-      if(!cat.keywords.some(k=>kwMatch(row.chat,k))) continue;
+      // STEP 1 — keyword match (word-boundary) OR optional raw regex patterns
+      // (cat.patterns lets a category catch obfuscated / shape-based text such as
+      //  "f**k", "b.c", "m@darch*d" that no literal keyword can express)
+      if(!catKeywordHit(cat,row.chat)&&!(cat.patterns&&cat.patterns.some(p=>p.test(row.chat)))) continue;
 
       // STEP 1.5 — cert time gate
       // Only flag cert issues AFTER the handler first sent the certificate link to Everyone.
@@ -976,12 +1199,25 @@ function detectIssues(rows){
         if(timeToSecs(row.time)<=certLinkSentSecs) continue; // message is before/at cert link send → skip
       }
 
-      // STEP 2 — exclusion check (with optional bypass)
+      // STEP 2 — exclusion check
+      //  • default (veto mode): any excl pattern hit drops the message unless an exclBypass pattern also hits
+      //  • exclMode:'strip':   the benign phrases are REMOVED from the message and the keywords/patterns are
+      //                        re-tested on what remains — far more precise for a sentiment category where a
+      //                        single benign idiom ("don't waste", "detect fraud") shouldn't hide a real gaali
       if(cat.excl&&cat.excl.length){
-        const excluded=cat.excl.some(p=>p.test(row.chat));
-        if(excluded){
-          const bypassed=cat.exclBypass&&cat.exclBypass.some(p=>p.test(row.chat));
-          if(!bypassed) continue;
+        if(cat.exclMode==='strip'){
+          let stripped=row.chat;
+          for(const p of cat.excl) stripped=stripped.replace(globalRx(p),' ');
+          if(stripped!==row.chat){
+            const still=catKeywordHit(cat,stripped)||(cat.patterns&&cat.patterns.some(p=>p.test(stripped)));
+            if(!still) continue;
+          }
+        } else {
+          const excluded=cat.excl.some(p=>p.test(row.chat));
+          if(excluded){
+            const bypassed=cat.exclBypass&&cat.exclBypass.some(p=>p.test(row.chat));
+            if(!bypassed) continue;
+          }
         }
       }
 
@@ -1581,7 +1817,7 @@ const PRESET_OCT1BSAI=buildPreset([
 ],{skip:['whatsapp','samantha'],
    replace:{welcome:_WELCOME_BSAI,
             aica:_mm('Sales / BSAI','BSAI Pitch + Payment Link','Build Side Income Using AI','~1:37 PM',{key:'aica'})},
-   extraClosers:[_mm('Closing','LinkedIn Prompt','recently completed a 1-day workshop','With LinkedIn post')]});
+   extraClosers:[_mm('Closing','LinkedIn Prompt','recently completed a 1-day AI Tools & Side Income Workshop conducted by be10X','With LinkedIn post')]});
 
 const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27,sep6bsai:PRESET_SEP6BSAI,sep6fin:PRESET_SEP6FIN,sep13tech:PRESET_SEP13TECH,oct1bsai:PRESET_OCT1BSAI};
 const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators',sep6bsai:'6th September BSAI',sep6fin:'6th September Finance',sep13tech:'13th September Tech',oct1bsai:'1st Oct BSAI'};
@@ -1848,7 +2084,8 @@ function buildCatGrid(){
     const inc=allIssues.filter(r=>r.category===cat.id&&r.include).length;
     const tot=allIssues.filter(r=>r.category===cat.id).length;
     const pct=Math.round((tot/ti)*100);
-    return`<div class="cat-card ${cat.ccls}" onclick="filterByCat('${cat.id}')"><div class="cat-name">${cat.name}</div><div class="cat-kw">${cat.keywords.slice(0,4).join(', ')}…</div><div class="cat-count-row"><span class="cat-num">${inc}</span><span class="cat-total">/ ${tot} flagged</span></div><div class="cat-bar"><div class="cat-bar-fill" style="width:${pct}%"></div></div></div>`;
+    const preview=cat.desc?esc(cat.desc):esc(cat.keywords.slice(0,4).join(', '))+'…';
+    return`<div class="cat-card ${cat.ccls}" onclick="filterByCat('${cat.id}')"><div class="cat-name">${esc(cat.name)}</div><div class="cat-kw">${preview}</div><div class="cat-count-row"><span class="cat-num">${inc}</span><span class="cat-total">/ ${tot} flagged</span></div><div class="cat-bar"><div class="cat-bar-fill" style="width:${pct}%"></div></div></div>`;
   }).join('');
 }
 
@@ -1856,16 +2093,25 @@ function filterByCat(id){document.getElementById('issueFilter').value=id;renderI
 function populateIssueFilter(){const s=document.getElementById('issueFilter');s.innerHTML='<option value="all">All Categories</option>';CATEGORIES.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;s.appendChild(o);});}
 
 function renderConfigCards(){
-  document.getElementById('configCards').innerHTML=CATEGORIES.map((cat,i)=>`<div class="builder-card"><div class="builder-card-head"><span class="badge ${cat.badge}">${cat.name}</span><span style="font-size:11px;color:var(--text3);font-family:var(--mono);">id: ${cat.id}</span><div style="margin-left:auto;"><button class="btn btn-secondary btn-xs" onclick="removeCat(${i})">Remove</button></div></div><div class="field-label">Keywords</div><div class="tags-wrap">${cat.keywords.map((kw,ki)=>`<span class="kw-tag">${kw}<span class="kw-rm" onclick="removeKw(${i},${ki})">×</span></span>`).join('')}</div><div style="margin-top:10px;display:flex;gap:8px;"><input class="inp inp-sm" id="kw-add-${i}" placeholder="Add keyword…" style="flex:1;" onkeydown="if(event.key==='Enter')addKwToCat(${i})"/><button class="btn btn-secondary btn-xs" onclick="addKwToCat(${i})">+ Add</button></div></div>`).join('');
+  document.getElementById('configCards').innerHTML=CATEGORIES.map((cat,i)=>`<div class="builder-card"><div class="builder-card-head"><span class="badge ${cat.badge}">${esc(cat.name)}</span><span style="font-size:11px;color:var(--text3);font-family:var(--mono);">id: ${esc(cat.id)}${cat.patterns&&cat.patterns.length?` · +${cat.patterns.length} regex patterns (obfuscated text)`:''}</span><div style="margin-left:auto;"><button class="btn btn-secondary btn-xs" onclick="removeCat(${i})">Remove</button></div></div>${cat.desc?`<div style="font-size:12px;color:var(--text2);margin:-6px 0 10px;">${esc(cat.desc)}</div>`:''}<div class="field-label">Keywords <span style="font-weight:400;color:var(--text3)">(${cat.keywords.length})</span></div><div class="tags-wrap">${cat.keywords.map((kw,ki)=>`<span class="kw-tag">${esc(kw)}<span class="kw-rm" onclick="removeKw(${i},${ki})">×</span></span>`).join('')}</div><div style="margin-top:10px;display:flex;gap:8px;"><input class="inp inp-sm" id="kw-add-${i}" placeholder="Add keyword…" style="flex:1;" onkeydown="if(event.key==='Enter')addKwToCat(${i})"/><button class="btn btn-secondary btn-xs" onclick="addKwToCat(${i})">+ Add</button></div></div>`).join('');
 }
 function removeKw(ci,ki){CATEGORIES[ci].keywords.splice(ki,1);renderConfigCards();}
 function addKwToCat(ci){const inp=document.getElementById(`kw-add-${ci}`);const v=inp.value.trim();if(!v)return;CATEGORIES[ci].keywords.push(v);inp.value='';renderConfigCards();}
 function removeCat(i){if(!confirm(`Remove category "${CATEGORIES[i].name}"?`))return;CATEGORIES.splice(i,1);renderConfigCards();populateIssueFilter();}
 function addKwTag(e){if(e.key!=='Enter'&&e.key!==',')return;e.preventDefault();const inp=document.getElementById('newCatKwInput');const v=inp.value.replace(',','').trim();if(!v||newCatKws.includes(v))return;newCatKws.push(v);inp.value='';renderNewTags();}
 function renderNewTags(){document.getElementById('newCatTags').innerHTML=newCatKws.map((kw,i)=>`<span class="kw-tag">${kw}<span class="kw-rm" onclick="newCatKws.splice(${i},1);renderNewTags()">×</span></span>`).join('');}
-function addCustomCategory(){const name=document.getElementById('newCatName').value.trim();const badge=document.getElementById('newCatColor').value;if(!name||!newCatKws.length){alert('Please add a name and at least one keyword.');return;}const id=name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');CATEGORIES.push({id,name,badge,ccls:'cc-green',keywords:[...newCatKws]});clearNewCat();renderConfigCards();populateIssueFilter();alert(`Category "${name}" added! Click Re-analyze to apply.`);}
+function addCustomCategory(){const name=document.getElementById('newCatName').value.trim();const badge=document.getElementById('newCatColor').value;if(!name||!newCatKws.length){alert('Please add a name and at least one keyword.');return;}const id=name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');const badgeCcls={'badge-custom':'cc-green','badge-blur':'cc-purple','badge-audio':'cc-amber','badge-recorded':'cc-red','badge-network':'cc-cyan','badge-login':'cc-blue','badge-payment':'cc-orange','badge-negative':'cc-slate'};CATEGORIES.push({id,name,badge,ccls:badgeCcls[badge]||'cc-green',keywords:[...newCatKws]});clearNewCat();renderConfigCards();populateIssueFilter();alert(`Category "${name}" added! Click Re-analyze to apply.`);}
 function clearNewCat(){document.getElementById('newCatName').value='';newCatKws=[];renderNewTags();}
-function reanalyze(){allIssues=detectIssues(allChats);updateNavCounts();buildCatGrid();populateIssueFilter();renderIssueTable();}
+// Re-run issue detection with the current category config.
+// BUGFIX: previously ran on allChats (spam INCLUDED) and never refreshed the stat cards,
+// so "Re-analyze" produced different counts than the initial upload. Now mirrors processText().
+function reanalyze(){
+  if(!allChats.length) return;
+  const {cleanChats,spamChats:sp}=detectAndRemoveSpam(allChats);
+  spamChats=sp;
+  allIssues=detectIssues(cleanChats);
+  updateNavCounts();updateStats();buildCatGrid();populateIssueFilter();renderIssueTable();
+}
 
 function updateStats(){
   const uniq=new Set(allChats.map(r=>r.admin)).size;
