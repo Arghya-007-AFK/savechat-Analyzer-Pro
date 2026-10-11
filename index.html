@@ -224,6 +224,8 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
 .cc-fuchsia .cat-name{color:#e879f9;}.cc-fuchsia .cat-num{color:#e879f9;}.cc-fuchsia .cat-bar-fill,.cc-fuchsia::after{background:#d946ef;}
 .badge-cert{background:rgba(132,204,22,0.1);color:#bef264;border:1px solid rgba(132,204,22,0.2);}.badge-cert::before{background:#84cc16;}
 .cc-lime .cat-name{color:#a3e635;}.cc-lime .cat-num{color:#a3e635;}.cc-lime .cat-bar-fill,.cc-lime::after{background:#84cc16;}
+.badge-negative{background:rgba(236,72,153,0.1);color:#f9a8d4;border:1px solid rgba(236,72,153,0.22);}.badge-negative::before{background:#ec4899;}
+.cc-pink .cat-name{color:#f472b6;}.cc-pink .cat-num{color:#f472b6;}.cc-pink .cat-bar-fill,.cc-pink::after{background:#ec4899;}
 
 /* HANDLER CHIP */
 .handler-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.22);border-radius:6px;padding:3px 9px;font-size:12px;color:#a5b4fc;font-weight:600;}
@@ -854,6 +856,76 @@ let CATEGORIES=[
      // asking if recording or content will be promoted (neutral)
      /\b(will|can|could)\s+(you|we|i)\s+promot/i
    ]},
+
+  // ─── Negative / Bad ───────────────────────────────────────────────────────
+  // Catch-all for negative sentiment: fraud / scam accusations, abuse & gaali
+  // (English + Hinglish), frustration, "waste of time", strong dissatisfaction,
+  // refund-demand anger. Deliberately the LAST built-in category: detectIssues()
+  // stops at the first matching category, so every message already claimed by
+  // another category keeps its original slug — this one only takes the rest.
+  // Generic words like bare 'bad' / 'poor' / 'damn' are NOT used (they flag
+  // "voice is poor", "video quality bad", "damn this is fantastic").
+  {id:'negative',name:'Negative / Bad',badge:'badge-negative',ccls:'cc-pink',
+   keywords:[
+     // fraud / scam / cheating / lying
+     'fraud','frauds','fraudster','fraudsters','fraudulent','frod','scam','scams','scammed','scamming',
+     'scammer','scammers','scamstar','cheat','cheats','cheated','cheating','cheater','cheaters',
+     'fake','fake promise','fake promises','misleading','mislead','misled','misguiding',
+     'false commitment','false commitments','false promise','false promises','false claim','false claims',
+     'false advertisement','lies','liar','liars','lying','jhooth','jhoot','jhuth','jhutha','jhoota',
+     'dhoka','dhokha','dhokebaaz','dhokebaz','loot','looting','looted','lootera','lootere','thug','thugs',
+     'chor hai','chorr','gimmick','gimmicks','trap us','trapping us','blackmail','ponzi',
+     'fool','fools','fooling','making fool','bewakoof','bewakuf','ullu',
+     'dont buy','don\'t buy','do not buy','dont join','don\'t join','do not join','beware','stay away',
+     // legal / reporting threats
+     'consumer court','consumer forum','cyber crime','cybercrime','cyber cell','legal action','legal notice',
+     'police complaint','call the police','go to police','file a complaint','file complaint',
+     'raise a complaint','lodge a complaint','complain against',
+     // abuse / profanity / gaali — English
+     'fuck','fucking','fucked','fucker','motherfucker','fck','fuk','asshole','bastard','bitch',
+     'shit','shitty','bullshit','crap','crappy','piss off','screw you','shut up','shutup','stfu','gtfo',
+     'idiot','idiots','stupid','dumb','moron','morons','nonsense','non sense','nonsence','rubbish',
+     'garbage','trash','wtf','wth','what the hell','what the heck','what the f',
+     // abuse / profanity / gaali — Hinglish
+     'chutiya','chutiye','chutiyo','chutiyapa','chutiyapanti','chutia','chitiya','chituyo',
+     'madarchod','madrchod','bhenchod','behenchod','bhen chod','behen chod','benchod','bhosdike','bhosdi',
+     'bhosda','bhosad','bsdk','bkl','bkc','mkc','bc','mc','gandu','gaandu','lund','lauda','lawda',
+     'chudwa','chudwana','ma chud','maa chud','teri maa','teri ma','randi','harami','haramkhor',
+     'haramzada','haramzade','kamina','kamine','kamini','kutta','kutte','kuttey','kutti','saala','saale',
+     'bakchod','bakchodi','gaali','abe chup','chup kar','chup raho','chup ho ja','chup baith',
+     // contempt / disgust / insults
+     'pathetic','ridiculous','horrible','terrible','awful','disgusting','shameless','shame on you',
+     'ghatiya','third class','thirdclass','bogus','bakwas','bakwaas','bekar','faltu','overrated','overhyped',
+     'unprofessional','disrespectful','insulting','rude','kya drama','nautanki','tamasha',
+     // worst / useless / waste
+     'worst','useless','pointless','meaningless','waste','wasted','wasting','waste of time','time waste',
+     'timewaste','time wasted','timepass','time pass','not worth','no value','zero value','nothing useful',
+     'not useful','not helpful','of no use','no use',
+     // frustration / emotion
+     'boring','bored','irritating','irritated','irritate','annoying','annoyed','frustrating','frustrated',
+     'frustration','disappointed','disappointing','disappointment','dissatisfied','unsatisfied',
+     'not satisfied','not happy','unhappy','let down','regret','hate','hated','sucks','sucked','lame',
+     'headache','pak gaya','pak gayi','dimag kharab','dimag mat khao','bore ho','bore kar',
+     // session-level complaints
+     'poor session','bad session','bad webinar','poor webinar','bad workshop','poor workshop',
+     'bad experience','poor experience','enough with','enough of it','thats enough','that\'s enough',
+     'overdoing','over doing','over selling','overselling','stop it','stop this','stop talking',
+     'stop yelling','stop shouting','stop saying',
+     // refund-demand anger
+     'give me my money back','give my money back','return my money','want my money back'
+   ],
+   excl:[
+     // short age + profession intro lines ("36 - ERP BC Developer")
+     /^(?=.{0,60}$)\s*(1[89]|[2-6]\d)\b[\s\-\u2013:,.)]/,
+     // negated / positive uses: "not boring", "no waste", "isn't fake" ...
+     /\b(not|no|never|isn.?t|wasn.?t|nothing|neither)\s+(a\s+|an\s+|so\s+|that\s+|very\s+|too\s+|really\s+)?(boring|bored|waste|wasted|fake|fraud|scam|cheat\w*|useless|worst|trash|pathetic|bad|dumb|stupid|irritating|annoying|disappoint\w*|frustrat\w*|misleading|lame|pointless|crap|rubbish|terrible|horrible|awful|disgusting|garbage|nonsense)\b/i,
+     // topical (not accusatory) use of "fake": fake reviews / fake videos / ...
+     /\bfake\s+(marketing|customers?|reviews?|ugc|news|videos?|images?|photos?|accounts?|profiles?|ads?|content|data|people|faces?|voices?)\b/i,
+     // waste management / waste water ...
+     /\bwaste\s+(management|water|material|paper|food|plastic|collection|disposal|recycl\w*)\b/i
+   ],
+   // ...unless unmistakable abuse / fraud words are also present
+   exclBypass:[/\b(fuck\w*|chutiy\w*|madarchod|bhenchod|behenchod|bsdk|gandu|motherfucker|fraud\w*|scam\w*|cheat\w*)\b/i]},
 ];
 
 function parseZoomChat(text){
@@ -1509,7 +1581,7 @@ const PRESET_OCT1BSAI=buildPreset([
 ],{skip:['whatsapp','samantha'],
    replace:{welcome:_WELCOME_BSAI,
             aica:_mm('Sales / BSAI','BSAI Pitch + Payment Link','Build Side Income Using AI','~1:37 PM',{key:'aica'})},
-   extraClosers:[_mm('Closing','LinkedIn Prompt','recently completed a 1-day AI Tools & Side Income Workshop conducted by be10X','With LinkedIn post')]});
+   extraClosers:[_mm('Closing','LinkedIn Prompt','recently completed a 1-day workshop','With LinkedIn post')]});
 
 const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27,sep6bsai:PRESET_SEP6BSAI,sep6fin:PRESET_SEP6FIN,sep13tech:PRESET_SEP13TECH,oct1bsai:PRESET_OCT1BSAI};
 const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators',sep6bsai:'6th September BSAI',sep6fin:'6th September Finance',sep13tech:'13th September Tech',oct1bsai:'1st Oct BSAI'};
