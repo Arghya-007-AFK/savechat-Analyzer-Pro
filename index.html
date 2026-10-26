@@ -404,6 +404,8 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <option value="sep6fin">6th September Finance</option>
       <option value="sep13tech">13th September Tech</option>
       <option value="oct1bsai">1st Oct BSAI</option>
+      <option value="oct18bsai">18th Oct BSAI</option>
+      <option value="oct22bsai">22nd Oct BSAI</option>
     </select>
   </div>
 
@@ -604,6 +606,8 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <option value="sep6fin">6th September Finance</option>
       <option value="sep13tech">13th September Tech</option>
       <option value="oct1bsai">1st Oct BSAI</option>
+      <option value="oct18bsai">18th Oct BSAI</option>
+      <option value="oct22bsai">22nd Oct BSAI</option>
     </select>
   </div>
 
@@ -1756,7 +1760,7 @@ const _OPENERS=[
   _mm('Warmup / Start','Warmup Message','kicking off the session right at','10:50 AM & 10:55 AM'),
   _mm('Warmup / Start','Welcome Message','Welcome to Be10X AI Tools Workshop Everyone','Exact 11:00 AM',{key:'welcome'}),
   _mm('Tech Support','Blur Video Fix','experiencing blur video','11:10 AM & 11:35 AM'),
-  _mm('Tech Support','Audio Fix','facing audio issues, please rejoin','11:30 AM & 11:45 AM'),
+  _mm('Tech Support','Audio Fix','facing audio issues, please rejoin','11:30 AM & 11:45 AM',{key:'audio'}),
 ];
 // Closers carry a `key` so presets can skip or replace individual ones.
 // WhatsApp Channel: removed from all Aug/Sep sessions — only 31st March keeps it.
@@ -1935,8 +1939,78 @@ const PRESET_OCT1BSAI=buildPreset([
             aica:_mm('Sales / BSAI','BSAI Pitch + Payment Link','Build Side Income Using AI','~1:37 PM',{key:'aica'})},
    extraClosers:[_mm('Closing','LinkedIn Prompt','recently completed a 1-day AI Tools & Side Income Workshop conducted by be10X','With LinkedIn post')]});
 
-const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27,sep6bsai:PRESET_SEP6BSAI,sep6fin:PRESET_SEP6FIN,sep13tech:PRESET_SEP13TECH,oct1bsai:PRESET_OCT1BSAI};
-const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators',sep6bsai:'6th September BSAI',sep6fin:'6th September Finance',sep13tech:'13th September Tech',oct1bsai:'1st Oct BSAI'};
+// ── Shared pieces for the 18th & 22nd October BSAI chatlogs ──
+// Three timed Wispr Flow notetaker nudges (10:57 / 11:05 / 11:18) — used by 18th Oct BSAI only. Matched on their
+// own opening text, so they never get confused with the WisprFlow tool-link row.
+const _WISPR_TIPS_OCT=[
+  _mm('Engagement','Wispr Notetaker Tip 1 (Quick tip)','Quick tip before we dive in','Exact 10:57 AM'),
+  _mm('Engagement','Wispr Notetaker Tip 2 (Little secret)',"little secret to getting more out of today",'Exact 11:05 AM'),
+  _mm('Engagement','Wispr Notetaker Tip 3 (Attention)','Your attention is more valuable than your notes','Exact 11:18 AM'),
+];
+// Replacements common to both October BSAI chatlogs
+const _OCT_BSAI_REPL={
+  // LinkedIn Prompt also says "AI Tools & Side Income Workshop" — excluded so it can't pass as the welcome
+  welcome:Object.assign({},_WELCOME_BSAI,{excl:['recently completed']}),
+  audio:_mm('Tech Support','Audio Fix','facing audio issues, please rejoin','11:15 AM & 11:45 AM',{key:'audio'}),
+  stay:_mm('Engagement','Stay Till End Alert','Important Information. Please ensure you stay until the end','After Higgsfield & after ElevenLabs',{key:'stay'}),
+  aica:_mm('Sales / BSAI','BSAI Pitch + Payment Link','Build Side Income Using AI','~1:37 PM',{key:'aica'}),
+  // "Alternative Payment Link" also appears in the combined Main + Alternate message
+  altpay:_mm('Sales / BSAI','Alternative Payment Link','Still facing Payment issues','After pitch',
+    {key:'altpay',snippets:['Still facing Payment issues','Alternative Payment Link']}),
+  // Review link is the g.page one; the other g.page link in the CSV is marked DON'T SEND
+  feedback:_mm('Closing','Feedback / Review Link','g.page/r/CZYV5nTjoKOpEBM/review','2:25 PM',{key:'feedback'}),
+};
+const _OCT_LINKEDIN_PROMPT=_mm('Closing','LinkedIn Prompt','recently completed a 1-day AI Tools & Side Income Workshop conducted by be10X','With LinkedIn post');
+// CSV lists notebook.google.com (typo) while ALL TOOLS LINKS uses notebooklm.google.com — accept both
+const _NOTEBOOKLM_OCT={snippets:['notebooklm.google','notebook.google.com']};
+
+// 18th October BSAI — WisprFlow is Tool 4 (link.be10x.in/wisprflow-ref), Kore.ai added as
+// Tool 10, Referral tracker present, no WhatsApp / Samantha.
+const PRESET_OCT18BSAI=buildPreset([
+  ..._WISPR_TIPS_OCT,
+  _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google','Tool 1',_NOTEBOOKLM_OCT),
+  _mm('Tool Link','Tool 2 – Stitch','stitch.withgoogle.com','Tool 2'),
+  _mm('Tool Link','Tool 3 – AI Studio','aistudio.google.com','Tool 3'),
+  // Notetaker tips carry the same wisprflow-ref link — excluded so only the tool drop counts
+  _mm('Tool Link','Tool 4 – WisprFlow','link.be10x.in/wisprflow-ref','Tool 4',
+      {key:'wisprflow',snippets:['link.be10x.in/wisprflow-ref','link.be10x.in/ref-wisprflow','link.be10x.in/wispr-ref','link.be10x.in/ref-wispr'],
+       excl:['Notetaker','note taker']}),
+  _mm('Tool Link','Tool 5 – Claude AI','claude.ai','Tool 5',
+      {excl:['claude.ai/code','claude.ai/cowork']}),
+  _mm('Tool Link','Tool 6 – Julius AI','julius.ai','Tool 6'),
+  _mm('Tool Link','Tool 7 – Higgsfield','higgsfield.ai','Tool 7'),
+  _mm('Tool Link','Tool 8 – Claude Skills','claude.com/skills','Tool 8'),
+  _mm('Tool Link','Tool 9 – ElevenLabs','elevenlabs.io','Tool 9'),
+  _mm('Tool Link','Tool 10 – Kore.ai Marketplace','kore.ai','Tool 10'),
+],{skip:['whatsapp','samantha'],
+   replace:_OCT_BSAI_REPL,
+   extraClosers:[_OCT_LINKEDIN_PROMPT]});
+
+// 22nd October BSAI — "Claude Powered" welcome (still matches BSAI welcome), Wispr referral
+// link (link.be10x.in/wispr-ref) is Tool 1, Kore.ai Tool 10, NO Referral tracker,
+// no WhatsApp / Samantha.
+const PRESET_OCT22BSAI=buildPreset([
+  // No Wispr notetaker tips in this session (those 3 messages are 18th Oct only)
+  _mm('Tool Link','Tool 1 – WisprFlow','link.be10x.in/wispr-ref',
+      '11:17, 11:20, 11:24, 11:28, 11:43, 12:04, 12:15, 12:41, 1:55',
+      {key:'wisprflow',snippets:['link.be10x.in/wispr-ref','link.be10x.in/wisprflow-ref','link.be10x.in/ref-wisprflow','link.be10x.in/ref-wispr'],
+       excl:['Notetaker','note taker']}),
+  _mm('Tool Link','Tool 2 – NotebookLM','notebooklm.google','Tool 2',_NOTEBOOKLM_OCT),
+  _mm('Tool Link','Tool 3 – Stitch','stitch.withgoogle.com','Tool 3'),
+  _mm('Tool Link','Tool 4 – AI Studio','aistudio.google.com','Tool 4'),
+  _mm('Tool Link','Tool 5 – Claude AI','claude.ai','Tool 5',
+      {excl:['claude.ai/code','claude.ai/cowork']}),
+  _mm('Tool Link','Tool 6 – Julius AI','julius.ai','Tool 6'),
+  _mm('Tool Link','Tool 7 – Higgsfield','higgsfield.ai','Tool 7'),
+  _mm('Tool Link','Tool 8 – Claude Skills','claude.com/skills','Tool 8'),
+  _mm('Tool Link','Tool 9 – ElevenLabs','elevenlabs.io','Tool 9'),
+  _mm('Tool Link','Tool 10 – Kore.ai Marketplace','kore.ai','Tool 10'),
+],{skip:['whatsapp','samantha','referral'],
+   replace:_OCT_BSAI_REPL,
+   extraClosers:[_OCT_LINKEDIN_PROMPT]});
+
+const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27,sep6bsai:PRESET_SEP6BSAI,sep6fin:PRESET_SEP6FIN,sep13tech:PRESET_SEP13TECH,oct1bsai:PRESET_OCT1BSAI,oct18bsai:PRESET_OCT18BSAI,oct22bsai:PRESET_OCT22BSAI};
+const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators',sep6bsai:'6th September BSAI',sep6fin:'6th September Finance',sep13tech:'13th September Tech',oct1bsai:'1st Oct BSAI',oct18bsai:'18th Oct BSAI',oct22bsai:'22nd Oct BSAI'};
 let sessionPreset='march31';
 
 let mandatoryResults = [];       // populated by checkMandatory()
@@ -1950,7 +2024,9 @@ let mandatorySnippetOverrides={};// id → custom snippet (user-edited)
 // member of a group, sending ANY member of that group counts as "sent". Applied to built-in
 // presets, custom-CSV imports and hand-edited snippets alike, so the rule holds whatever the source.
 const SNIPPET_ALIASES=[
-  ['link.be10x.in/wisprflow','wisprflow.ai'],   // WisprFlow: short link OR site link — either one counts
+  // WisprFlow: any of these links counts as sent (short link, site link, and all referral variants)
+  ['link.be10x.in/wisprflow-ref','link.be10x.in/ref-wisprflow','link.be10x.in/wispr-ref','link.be10x.in/ref-wispr',
+   'link.be10x.in/wisprflow','wisprflow.ai'],
 ];
 function expandSnippetAliases(snips){
   const out=[...snips];
