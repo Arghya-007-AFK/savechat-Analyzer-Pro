@@ -1986,14 +1986,14 @@ const PRESET_OCT18BSAI=buildPreset([
    replace:_OCT_BSAI_REPL,
    extraClosers:[_OCT_LINKEDIN_PROMPT]});
 
-// 22nd October BSAI — "Claude Powered" welcome (still matches BSAI welcome), Wispr referral
-// link (link.be10x.in/wispr-ref) is Tool 1, Kore.ai Tool 10, NO Referral tracker,
+// 22nd October BSAI (updated chatlog) — "Claude Powered" welcome (still matches BSAI welcome),
+// WisprFlow (link.be10x.in/wisprflow10) is Tool 1, 9 tools (no Kore.ai), NO Referral tracker,
 // no WhatsApp / Samantha.
 const PRESET_OCT22BSAI=buildPreset([
   // No Wispr notetaker tips in this session (those 3 messages are 18th Oct only)
-  _mm('Tool Link','Tool 1 – WisprFlow','link.be10x.in/wispr-ref',
-      '11:17, 11:20, 11:24, 11:28, 11:43, 12:04, 12:15, 12:41, 1:55',
-      {key:'wisprflow',snippets:['link.be10x.in/wispr-ref','link.be10x.in/wisprflow-ref','link.be10x.in/ref-wisprflow','link.be10x.in/ref-wispr'],
+  _mm('Tool Link','Tool 1 – WisprFlow','link.be10x.in/wisprflow10',
+      '11:17, 11:20, 11:26, 11:29, 12:04, 12:15, 12:41, 2:07',
+      {key:'wisprflow',snippets:['link.be10x.in/wisprflow10','link.be10x.in/wisprflow','link.be10x.in/wispr-ref','link.be10x.in/ref-wisprflow','link.be10x.in/ref-wispr'],
        excl:['Notetaker','note taker']}),
   _mm('Tool Link','Tool 2 – NotebookLM','notebooklm.google','Tool 2',_NOTEBOOKLM_OCT),
   _mm('Tool Link','Tool 3 – Stitch','stitch.withgoogle.com','Tool 3'),
@@ -2004,7 +2004,6 @@ const PRESET_OCT22BSAI=buildPreset([
   _mm('Tool Link','Tool 7 – Higgsfield','higgsfield.ai','Tool 7'),
   _mm('Tool Link','Tool 8 – Claude Skills','claude.com/skills','Tool 8'),
   _mm('Tool Link','Tool 9 – ElevenLabs','elevenlabs.io','Tool 9'),
-  _mm('Tool Link','Tool 10 – Kore.ai Marketplace','kore.ai','Tool 10'),
 ],{skip:['whatsapp','samantha','referral'],
    replace:_OCT_BSAI_REPL,
    extraClosers:[_OCT_LINKEDIN_PROMPT]});
@@ -2026,6 +2025,8 @@ let mandatorySnippetOverrides={};// id → custom snippet (user-edited)
 const SNIPPET_ALIASES=[
   // WisprFlow: any of these links counts as sent (short link, site link, and all referral variants)
   ['link.be10x.in/wisprflow-ref','link.be10x.in/ref-wisprflow','link.be10x.in/wispr-ref','link.be10x.in/ref-wispr',
+   'link.be10x.in/wisprflow1','link.be10x.in/wisprflow3','link.be10x.in/wisprflow4','link.be10x.in/wisprflow6',
+   'link.be10x.in/wisprflow7','link.be10x.in/wisprflow8','link.be10x.in/wisprflow9','link.be10x.in/wisprflow10',
    'link.be10x.in/wisprflow','wisprflow.ai'],
 ];
 function expandSnippetAliases(snips){
