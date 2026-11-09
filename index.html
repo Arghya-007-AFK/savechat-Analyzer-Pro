@@ -406,6 +406,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <option value="oct1bsai">1st Oct BSAI</option>
       <option value="oct18bsai">18th Oct BSAI</option>
       <option value="oct22bsai">22nd Oct BSAI</option>
+      <option value="nov4career">4th Nov Students Carrier Guidance</option>
     </select>
   </div>
 
@@ -608,6 +609,7 @@ tbody tr:hover td{background:rgba(255,255,255,0.022);}
       <option value="oct1bsai">1st Oct BSAI</option>
       <option value="oct18bsai">18th Oct BSAI</option>
       <option value="oct22bsai">22nd Oct BSAI</option>
+      <option value="nov4career">4th Nov Students Carrier Guidance</option>
     </select>
   </div>
 
@@ -1757,9 +1759,9 @@ function _mm(cat,label,snippet,timing,extra){
   return Object.assign({cat:cat,label:label,snippet:snippet,timing:timing},extra||{});
 }
 const _OPENERS=[
-  _mm('Warmup / Start','Warmup Message','kicking off the session right at','10:50 AM & 10:55 AM'),
+  _mm('Warmup / Start','Warmup Message','kicking off the session right at','10:50 AM & 10:55 AM',{key:'warmup'}),
   _mm('Warmup / Start','Welcome Message','Welcome to Be10X AI Tools Workshop Everyone','Exact 11:00 AM',{key:'welcome'}),
-  _mm('Tech Support','Blur Video Fix','experiencing blur video','11:10 AM & 11:35 AM'),
+  _mm('Tech Support','Blur Video Fix','experiencing blur video','11:10 AM & 11:35 AM',{key:'blur'}),
   _mm('Tech Support','Audio Fix','facing audio issues, please rejoin','11:30 AM & 11:45 AM',{key:'audio'}),
 ];
 // Closers carry a `key` so presets can skip or replace individual ones.
@@ -2008,8 +2010,36 @@ const PRESET_OCT22BSAI=buildPreset([
    replace:_OCT_BSAI_REPL,
    extraClosers:[_OCT_LINKEDIN_PROMPT]});
 
-const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27,sep6bsai:PRESET_SEP6BSAI,sep6fin:PRESET_SEP6FIN,sep13tech:PRESET_SEP13TECH,oct1bsai:PRESET_OCT1BSAI,oct18bsai:PRESET_OCT18BSAI,oct22bsai:PRESET_OCT22BSAI};
-const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators',sep6bsai:'6th September BSAI',sep6fin:'6th September Finance',sep13tech:'13th September Tech',oct1bsai:'1st Oct BSAI',oct18bsai:'18th Oct BSAI',oct22bsai:'22nd Oct BSAI'};
+// 4th November Students Career Guidance — 10:00 AM session ("AI-Powered Career Guidance
+// Workshop"), 9 tools (NotebookLM, Claude, Emergent, HeyGen, n8n, Supergrow, ATS GPT, ChatGPT,
+// Yoodli), "AI Career Launchpad" pitch. No WisprFlow, Success Playlist, Referral, LMS App,
+// WhatsApp, Samantha or LinkedIn Prompt in this chatlog.
+const PRESET_NOV4CAREER=buildPreset([
+  _mm('Tool Link','Tool 1 – NotebookLM','notebooklm.google','Tool 1',_NOTEBOOKLM_OCT),
+  _mm('Tool Link','Tool 2 – Claude AI','claude.ai','Tool 2',
+      {excl:['claude.ai/code','claude.ai/cowork']}),
+  _mm('Tool Link','Tool 3 – Emergent','emergent.sh','Tool 3'),
+  _mm('Tool Link','Tool 4 – HeyGen','heygen.com','Tool 4'),
+  _mm('Tool Link','Tool 5 – n8n','n8n.io','Tool 5'),
+  _mm('Tool Link','Tool 6 – Supergrow','supergrow.ai','Tool 6'),
+  _mm('Tool Link','Tool 7 – ATS Resume GPT','be10x-ats-resume-generator','Tool 7'),
+  _mm('Tool Link','Tool 8 – ChatGPT','chatgpt.com','Tool 8',{excl:'chatgpt.com/g/'}),
+  _mm('Tool Link','Tool 9 – Yoodli','yoodli.ai','Tool 9'),
+],{skip:['whatsapp','samantha','success','referral','lmsapp'],
+   replace:{
+     warmup:_mm('Warmup / Start','Warmup Message','kicking off the session right at','9:50 AM & 9:55 AM',{key:'warmup'}),
+     welcome:_mm('Warmup / Start','Welcome Message','AI-Powered Career Guidance Workshop','Exact 10:00 AM',
+       {key:'welcome',snippets:['AI-Powered Career Guidance Workshop','Career Guidance Workshop Everyone']}),
+     blur:_mm('Tech Support','Blur Video Fix','experiencing blur video','10:10 AM & 10:35 AM',{key:'blur'}),
+     audio:_mm('Tech Support','Audio Fix','facing audio issues, please rejoin','10:15 AM & 10:45 AM',{key:'audio'}),
+     stay:_mm('Engagement','Stay Till End Alert','Important Information. Please ensure you stay until the end','After Supergrow & after Yoodli',{key:'stay'}),
+     aica:_mm('Sales / AICL','AI Career Launchpad Pitch + Payment Link','AI Career Launchpad','Price reveal',{key:'aica'}),
+     altpay:Object.assign({},_OCT_BSAI_REPL.altpay,{cat:'Sales / AICL'}),
+     feedback:Object.assign({},_OCT_BSAI_REPL.feedback,{timing:'End of session'}),
+   }});
+
+const MANDATORY_PRESETS={march31:PRESET_MARCH31,aug11:PRESET_AUG11,aug9:PRESET_AUG9,aug16:PRESET_AUG16,aug27:PRESET_AUG27,sep6bsai:PRESET_SEP6BSAI,sep6fin:PRESET_SEP6FIN,sep13tech:PRESET_SEP13TECH,oct1bsai:PRESET_OCT1BSAI,oct18bsai:PRESET_OCT18BSAI,oct22bsai:PRESET_OCT22BSAI,nov4career:PRESET_NOV4CAREER};
+const PRESET_LABELS={march31:'31st March Video',aug11:'11th August Video',aug9:'9th August Student Video',aug16:'16th August Business',aug27:'27th August Educators',sep6bsai:'6th September BSAI',sep6fin:'6th September Finance',sep13tech:'13th September Tech',oct1bsai:'1st Oct BSAI',oct18bsai:'18th Oct BSAI',oct22bsai:'22nd Oct BSAI',nov4career:'4th Nov Students Carrier Guidance'};
 let sessionPreset='march31';
 
 let mandatoryResults = [];       // populated by checkMandatory()
@@ -2103,6 +2133,8 @@ const CAT_COLORS = {
   'Tool Link':      '#10b981',
   'Engagement':     '#f59e0b',
   'Sales / AICA':   '#ec4899',
+  'Sales / BSAI':   '#ec4899',
+  'Sales / AICL':   '#ec4899',
   'Closing':        '#a78bfa',
 };
 
